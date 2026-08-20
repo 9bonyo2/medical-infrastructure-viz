@@ -16,8 +16,8 @@ import streamlit as st
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from src.analysis.correlation import CORR_PAIRS, compute_correlations, interpret  # noqa: E402
-from src.collect.common import PROCESSED_DIR, load_korea_geojson  # noqa: E402
+from src.aging.analysis.correlation import CORR_PAIRS, compute_correlations, interpret  # noqa: E402
+from src.aging.collect.common import PROCESSED_DIR, load_korea_geojson  # noqa: E402
 
 st.set_page_config(page_title="고령화 파트 | 지역별 고령인구·노인복지센터 분석", page_icon="👵", layout="wide")
 

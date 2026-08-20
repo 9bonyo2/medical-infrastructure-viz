@@ -9,7 +9,7 @@ Streamlit 앱(app/streamlit_app.py)에서도 동일 함수를 재사용한다.
 import pandas as pd
 from scipy import stats
 
-from src.collect.common import PROCESSED_DIR, get_logger
+from src.aging.collect.common import PROCESSED_DIR, get_logger
 
 logger = get_logger(__name__)
 
