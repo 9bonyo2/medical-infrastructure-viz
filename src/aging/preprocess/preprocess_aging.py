@@ -26,7 +26,7 @@ import argparse
 
 import pandas as pd
 
-from src.collect.common import PROCESSED_DIR, RAW_DIR, get_logger, standardize_sido
+from src.aging.collect.common import PROCESSED_DIR, RAW_DIR, get_logger, standardize_sido
 
 logger = get_logger(__name__)
 

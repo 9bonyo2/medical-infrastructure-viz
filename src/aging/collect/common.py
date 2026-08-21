@@ -3,10 +3,10 @@ import logging
 import sys
 from pathlib import Path
 
-# 프로젝트 루트 기준 경로
-ROOT_DIR = Path(__file__).resolve().parents[2]
-RAW_DIR = ROOT_DIR / "data" / "raw"
-PROCESSED_DIR = ROOT_DIR / "data" / "processed"
+# 프로젝트 루트 기준 경로 (src/aging/collect/common.py -> parents[3] == 프로젝트 루트)
+ROOT_DIR = Path(__file__).resolve().parents[3]
+RAW_DIR = ROOT_DIR / "data" / "aging" / "raw"
+PROCESSED_DIR = ROOT_DIR / "data" / "aging" / "processed"
 LOG_DIR = ROOT_DIR / "logs"
 
 RAW_DIR.mkdir(parents=True, exist_ok=True)
