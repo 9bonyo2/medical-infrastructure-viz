@@ -21,7 +21,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from src.collect.common import RAW_DIR, get_logger, standardize_sido
+from src.aging.collect.common import RAW_DIR, get_logger, standardize_sido
 
 logger = get_logger(__name__)
 

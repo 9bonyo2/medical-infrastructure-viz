@@ -18,6 +18,13 @@ KOSIS가 직접 제공하는 "노인 천명당 노인여가복지시설수" 지�
     collect_senior_facilities.py(data.go.kr 원본 파일)로 더 상세하게(시설유형별) 확보되어 있어
     Open API로는 별도 재수집하지 않는다.
 
+  3) DT_MIRE01 (orgId=354, 건강보험심사평가원) : 시도별·요양기관종별 현황("요양병원" 항목 포함)
+     - 노인복지 파트와 구분되는 "의료" 지표(고령인구 10만명당 요양병원 수) 확보용으로 추가.
+     - 이 표는 연간(prdSe=Y) 자료가 없고 **분기(prdSe=Q)** 로만 제공된다(확인 완료, 그 외 조합은
+       전부 "err":"30" 데이터 없음). 분기 코드는 "YYYYQ"(예: 2024년 4분기="202404").
+     - 분류축(C1=요양기관종별, C2=시도별) 코드값이 표마다 달라 SIDO_CODES를 그대로 쓸 수 없으므로,
+       objL1=ALL/objL2=ALL로 전체를 받은 뒤 C1_NM=="요양병원"으로 후필터링한다.
+
 *** 사용 전 준비 ***
 1. KOSIS Open API 인증키 발급: https://kosis.kr/openapi/index/index.jsp (로그인 > 인증키 신청)
 2. 환경변수로 설정 (키 값을 코드에 직접 넣지 말 것)
@@ -33,7 +40,7 @@ import time
 import pandas as pd
 import requests
 
-from src.collect.common import RAW_DIR, get_logger, standardize_sido
+from src.aging.collect.common import RAW_DIR, get_logger, standardize_sido
 
 logger = get_logger(__name__)
 
@@ -41,6 +48,7 @@ API_URL = "https://kosis.kr/openapi/Param/statisticsParameterData.do"
 
 AGING_RATIO_OUT = RAW_DIR / "kosis_aging_ratio_raw.csv"
 FACILITY_DENSITY_OUT = RAW_DIR / "kosis_facility_density_raw.csv"
+CARE_HOSPITAL_OUT = RAW_DIR / "kosis_care_hospital_raw.csv"
 
 # 시도(2단계 행정구역) 수준 행만 골라내기 위한 코드 집합.
 # 대부분 2자리 코드(11=서울 ...)이나, 2025~2026년 광주·전남 행정구역 통합 반영으로
@@ -117,9 +125,72 @@ def _to_sido_wide(df: pd.DataFrame) -> pd.DataFrame:
     return wide
 
 
+def _fetch_care_hospital(quarter: str, timeout: int = 20, max_retries: int = 3) -> pd.DataFrame:
+    """DT_MIRE01(시도별 종별 요양기관 현황)에서 "요양병원" 항목만 시도별로 추출한다.
+
+    이 표는 연간(Y) 자료가 없어 분기(Q, "YYYYQ" 예: "202404")로 요청해야 한다.
+    """
+    api_key = os.environ.get("KOSIS_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "환경변수 KOSIS_API_KEY가 설정되지 않았습니다. "
+            "KOSIS Open API 인증키를 발급받아 설정한 뒤 다시 실행하세요."
+        )
+
+    params = {
+        "method": "getList",
+        "apiKey": api_key,
+        "itmId": "ALL",
+        "objL1": "ALL", "objL2": "ALL", "objL3": "", "objL4": "",
+        "format": "json",
+        "jsonVD": "Y",
+        "prdSe": "Q",
+        "startPrdDe": quarter,
+        "endPrdDe": quarter,
+        "orgId": "354",
+        "tblId": "DT_MIRE01",
+    }
+
+    last_err = None
+    for attempt in range(1, max_retries + 1):
+        started = time.time()
+        try:
+            logger.info(f"[시도 {attempt}/{max_retries}] KOSIS API 요청: DT_MIRE01 요양기관현황 ({quarter})")
+            resp = requests.get(API_URL, params=params, timeout=timeout)
+            resp.raise_for_status()
+            data = resp.json()
+
+            if isinstance(data, dict):
+                raise RuntimeError(f"KOSIS API 오류: {data.get('errMsg', data)}")
+
+            df = pd.DataFrame(data)
+            elapsed = time.time() - started
+            logger.info(f"수집 성공 - 원본 행 수: {len(df)}, 소요시간: {elapsed:.2f}s")
+            return df
+        except Exception as e:  # noqa: BLE001
+            last_err = e
+            logger.warning(f"수집 실패(시도 {attempt}/{max_retries}): {e}")
+            time.sleep(1.5 * attempt)
+
+    logger.error(f"KOSIS API 수집 최종 실패(care_hospital): {last_err}")
+    raise RuntimeError(f"KOSIS API 수집 최종 실패(care_hospital): {last_err}")
+
+
+def _to_care_hospital_table(df: pd.DataFrame, quarter: str) -> pd.DataFrame:
+    """C1_NM=="요양병원" 행만 남기고 시도명 표준화 후 (시도, 기준분기, 요양병원수)로 정리."""
+    df["DT"] = pd.to_numeric(df["DT"], errors="coerce")
+    care = df[(df["C1_NM"] == "요양병원") & (df["C2_NM"] != "계")].copy()
+    care["시도"] = care["C2_NM"].apply(standardize_sido)
+    out = care[["시도", "DT"]].rename(columns={"DT": "요양병원수"})
+    out["요양병원수"] = out["요양병원수"].astype("Int64")
+    out.insert(1, "기준분기", quarter)
+    return out.sort_values("요양병원수", ascending=False).reset_index(drop=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="KOSIS Open API 고령인구 지표 수집")
     parser.add_argument("--year", default="2024")
+    parser.add_argument("--quarter", default="202404", help="요양병원 현황 기준 분기(YYYYQ, 기본 2024년 4분기)")
     args = parser.parse_args()
 
     aging_raw = _fetch("aging_ratio", args.year)
@@ -131,6 +202,11 @@ def main() -> None:
     density_wide = _to_sido_wide(density_raw)
     density_wide.to_csv(FACILITY_DENSITY_OUT, index=False, encoding="utf-8-sig")
     logger.info(f"저장 완료: {FACILITY_DENSITY_OUT} ({len(density_wide)}행, {list(density_wide.columns)})")
+
+    care_raw = _fetch_care_hospital(args.quarter)
+    care_table = _to_care_hospital_table(care_raw, args.quarter)
+    care_table.to_csv(CARE_HOSPITAL_OUT, index=False, encoding="utf-8-sig")
+    logger.info(f"저장 완료: {CARE_HOSPITAL_OUT} ({len(care_table)}행, 전국 합계 {int(care_table['요양병원수'].sum())}개소)")
 
 
 if __name__ == "__main__":
