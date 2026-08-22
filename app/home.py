@@ -68,16 +68,28 @@ with q1:
     quicklink_card("🩺", "응급의료 균형", "인구 대비 권역별 응급의료기관의 위치와 병상 수용 능력 정보 확인",
                     border_color="#2F6FED")
 with q2:
+    quicklink_card("🩺", "응급의료 균형", "인구 대비 권역별 응급의료기관의 위치와 병상 수용 능력 정보 확인",
+                    border_color="#2F6FED")
+
+q3, q4, q5 = st.columns(3, gap="medium")
+with q3:
     quicklink_card("👥", "고령화와 노인의료", "급증하는 고령인구와 시니어 맞춤 요양·복지·의료시설의 수급 미스매치 비교",
                     border_color="#12B886")
-
-q3, q4 = st.columns(2, gap="medium")
-with q3:
+with q4:
+    quicklink_card("👥", "고령화와 노인의료", "급증하는 고령인구와 시니어 맞춤 요양·복지·의료시설의 수급 미스매치 비교",
+                    border_color="#12B886")
+with q5:
+    quicklink_card("👥", "고령화와 노인의료", "급증하는 고령인구와 시니어 맞춤 요양·복지·의료시설의 수급 미스매치 비교",
+                    border_color="#12B886")
+    
+q6, q7 = st.columns(2, gap="medium")
+with q6:
     quicklink_card("🍼", "출산율과 소아과", "시도별 합계출산율 추이와 전문 소아과 인프라의 위기 수준 데이터 분석",
                     border_color="#2F6FED")
-with q4:
-    quicklink_card("❗", "종합 의료 취약지역 TOP 5", "수요지표와 공급지표를 인구 가중치로 결합하여 취약지역 종합 순위 도출",
-                    border_color="#E5484D")
+with q7:
+    quicklink_card("🍼", "출산율과 소아과 DY", "2시도별 합계출산율 추이와 전문 소아과 인프라의 위기 수준 데이터 분석",
+                    border_color="#2F6FED")
+
 
 st.write("")
 

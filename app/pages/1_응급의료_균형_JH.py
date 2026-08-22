@@ -18,7 +18,7 @@ from utils.sample_data import (
 st.set_page_config(page_title="응급의료 균형 분석", page_icon="🚑", layout="wide")
 
 inject_base_style()
-render_sidebar(active_key="emergency")
+render_sidebar(active_key="emergency_jh")
 
 # TODO(팀): 아래는 고령화 페이지와 동일한 레이아웃의 템플릿입니다.
 #   utils/sample_data.py 에 응급의료 전용 데이터 함수를 추가한 뒤
