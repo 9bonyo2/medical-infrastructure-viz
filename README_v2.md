@@ -1,12 +1,5 @@
 # 🩺 지역별 의료 인프라 격차 현황 분석 웹 대시보드
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?logo=streamlit&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
-![Data Source](https://img.shields.io/badge/Data-KOSIS%20%2F%20HIRA-orange)
-
----
-
 ## 1. 개요
 
 ### 개발 목적
