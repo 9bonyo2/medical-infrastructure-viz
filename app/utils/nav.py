@@ -15,11 +15,14 @@ from utils.style import COLORS
 
 # key: 내부 식별자 / label: 화면 표시 텍스트 / icon: bootstrap-icons 이름 / target: 실제 파일 경로
 PAGES = [
-    {"key": "overview", "label": "프로젝트 개요", "icon": "activity", "target": "app.py"},
-    {"key": "emergency", "label": "응급의료 균형 분석", "icon": "heart-pulse", "target": "pages/1_응급의료_균형_분석.py"},
-    {"key": "aging", "label": "고령화와 노인의료 분석", "icon": "people", "target": "pages/2_고령화와_노인의료_분석.py"},
-    {"key": "birth", "label": "출산율과 소아과 분석", "icon": "emoji-smile", "target": "pages/3_출산율과_소아과_분석.py"},
-    {"key": "top5", "label": "의료 취약지역 TOP 5", "icon": "exclamation-triangle", "target": "pages/4_의료_취약지역_TOP5.py"},
+    {"key": "overview", "label": "프로젝트 개요", "icon": "activity", "target": "home.py"},
+    {"key": "emergency_jy", "label": "응급의료 균형 (JH)", "icon": "heart-pulse", "target": "pages/1_응급의료_균형_JH.py"},
+    {"key": "emergency_dy", "label": "응급의료 균형 (DY)", "icon": "heart-pulse", "target": "pages/2_응급의료_균형_DY.py"},
+    {"key": "aging_sj", "label": "고령화 의료시설 (SJ)", "icon": "people", "target": "pages/3_고령화_의료시설_SJ.py"},
+    {"key": "aging_sy", "label": "고령화 의료시설 (SY)", "icon": "people", "target": "pages/4_고령화_의료시설_SY.py"},
+    {"key": "aging_jy", "label": "고령화 의료시설 (JY)", "icon": "people", "target": "pages/5_고령화_의료시설_JY.py"},
+    {"key": "pediatric_jh", "label": "출산율과 소아과 (JH)", "icon": "emoji-smile", "target": "pages/6_출산율_소아과_JH.py"},
+    {"key": "pediatric_dy", "label": "출산율과 소아과 (DY)", "icon": "emoji-smile", "target": "pages/7_출산율_소아과_DY.py"}
 ]
 
 

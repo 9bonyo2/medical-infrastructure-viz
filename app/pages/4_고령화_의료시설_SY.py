@@ -18,7 +18,7 @@ from utils.sample_data import (
 st.set_page_config(page_title="고령화와 노인의료 분석", page_icon="👵", layout="wide")
 
 inject_base_style()
-render_sidebar(active_key="aging")
+render_sidebar(active_key="aging_sy")
 
 # ── 타이틀 ────────────────────────────────────────────────────────────
 st.markdown('<div class="page-title">고령화 파트</div>', unsafe_allow_html=True)
