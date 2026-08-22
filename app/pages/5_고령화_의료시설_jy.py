@@ -133,8 +133,7 @@ except Exception as e:
 st.markdown('<div class="page-title">고령 의료 및 복지 인프라 현황</div>', unsafe_allow_html=True)
 st.markdown(
     "지역별 노인복지시설과 요양병원의 수급 현황을 정밀 비교 분석하여 공급 불균형 상태를 진단합니다. "
-    ,
-    unsafe_allow_html=True
+    ,unsafe_allow_html=True
 )
 
 st.write("")
@@ -210,7 +209,7 @@ with kpi_cols[3]:
 st.write("")
 
 # ── [3. 중단: 지도 시각화 + 탭별 TOP 3 데이터프레임] ───────────────────────────
-st.markdown("### 🗺️ 전국 노인 인프라 공급 공간 분포 분석")
+st.markdown("###  전국 노인 인프라 공급 공간 분포 분석")
 
 # 탭을 먼저 최상위에 두어 클릭에 의해 아래의 지도와 표가 동시 갱신되도록 탭별 칼럼 구성
 tab_med, tab_wel, tab_bal = st.tabs(["의료현황 분석", "복지현황 분석", "균형현황 분석"])
@@ -308,12 +307,12 @@ with tab_bal:
 st.write("")
 
 # ── [4. 하단: 상세 데이터 항목 3대 분석 섹션] ──────────────────────────────
-st.markdown("### 📊 인프라 비교 3대 상세 분석 섹션")
+st.markdown("###  인프라 비교 상세 분석")
 
 # ──────────────────────────────────────────────────────────────────────
 # 섹션 1: 지역/지역별 인프라 상대적 비율 비교 (Min-Max 정규화 막대그래프)
 # ──────────────────────────────────────────────────────────────────────
-st.markdown("#### 1️⃣ 지역별 정규화 인프라 비율 비교")
+st.markdown("#### 1️. 지역별 정규화 인프라 비율 비교")
 # 연도 선택 1개 토글 (라디오 버튼)
 s1_years = sorted(list(df_normalized["연도"].unique()))
 selected_year_s1 = st.radio(
@@ -336,7 +335,7 @@ with st.container(border=True):
         barmode="group",
         color_discrete_sequence=["#F2994A", "#2F6FED"], # 복지 주황, 의료 파랑
         labels={"value": "정규화 점수 (Min-Max)", "variable": "지표 구분"},
-        title=f"📊 {selected_year_s1}년 시도별 복지 vs 의료 정규화 인프라 비율 (0~1 범위 비교)"
+        title=f" {selected_year_s1}년 시도별 복지 vs 의료 정규화 인프라 비율 (0~1 범위 비교)"
     )
     fig_s1.update_layout(height=380, margin=dict(l=10, r=10, t=40, b=10))
     st.plotly_chart(fig_s1, use_container_width=True)
@@ -363,7 +362,7 @@ st.write("")
 # ──────────────────────────────────────────────────────────────────────
 # 섹션 2: 지역/연도별 복지시설 vs 요양병원 공급 추이 산점도
 # ──────────────────────────────────────────────────────────────────────
-st.markdown("#### 2️⃣ 복지시설 vs 요양병원 공급 추이 산점도")
+st.markdown("#### 2️. 복지시설 vs 요양병원 공급 추이 산점도")
 # 가로형 도트(버튼 라디오) 형태 단일 연도 선택
 selected_year_s2 = st.radio(
     "📅 섹션 2 분석 대상 연도 선택",
@@ -389,7 +388,7 @@ with col_s2_scatter:
             color="인프라_치우침_지수",
             color_continuous_scale="RdYlBu_r", # 복지치우침(양수)은 빨강/주황, 의료치우침(음수)은 파랑
             labels={"복지시설_합계": "노인복지시설 수 (개)", "요양병원_수": "요양병원 수 (개)"},
-            title=f"📈 {selected_year_s2}년 노인복지시설 vs 요양병원 상관 관계 및 치우침 현황"
+            title=f" {selected_year_s2}년 노인복지시설 vs 요양병원 상관 관계 및 치우침 현황"
         )
         fig_s2.update_traces(textposition='top center', marker=dict(line=dict(width=1, color="grey")))
         fig_s2.update_layout(height=400, margin=dict(l=10, r=10, t=40, b=10))
@@ -397,7 +396,7 @@ with col_s2_scatter:
 
 with col_s2_table:
     with st.container(border=True):
-        st.markdown(f"##### 📊 {selected_year_s2}년 복지-의료시설 원본 데이터")
+        st.markdown(f"#####  {selected_year_s2}년 복지-의료시설 원본 데이터")
         df_s2_tbl = df_s2[["시도", "복지시설_합계", "요양병원_수"]].sort_values("복지시설_합계", ascending=False).reset_index(drop=True)
         st.dataframe(df_s2_tbl, use_container_width=True, hide_index=True, height=350)
 
@@ -406,7 +405,7 @@ st.write("")
 # ──────────────────────────────────────────────────────────────────────
 # 섹션 3: 지역별 의료시설과 복지시설의 연평균 증감률(CAGR) 변화 패턴 종합분석
 # ──────────────────────────────────────────────────────────────────────
-st.markdown("#### 3️⃣ 연도 구간별 복지/의료시설 CAGR 동적 변화 분석")
+st.markdown("#### 3️. 연도 구간별 복지/의료시설 CAGR 동적 변화 분석")
 
 # 연도 구간 슬라이더 배치
 min_year = int(df_normalized["연도"].min())
@@ -453,13 +452,13 @@ with col_s3_chart:
                 barmode="group",
                 color_discrete_sequence=["#F2994A", "#2F6FED"], # 복지 주황, 의료 파랑
                 labels={"value": "연평균 증감률 CAGR (%)", "variable": "시설 구분"},
-                title=f"📈 {start_year}년 ~ {end_year}년 ({period}개년) 시도별 인프라 연평균 증감률(CAGR)"
+                title=f" {start_year}년 ~ {end_year}년 ({period}개년) 시도별 인프라 연평균 증감률(CAGR)"
             )
             fig_s3.update_layout(height=400, margin=dict(l=10, r=10, t=40, b=10), xaxis_tickangle=-45)
             st.plotly_chart(fig_s3, use_container_width=True)
 
 with col_s3_table:
     with st.container(border=True):
-        st.markdown(f"##### 📊 {start_year}년 ~ {end_year}년 CAGR 수치 데이터표")
+        st.markdown(f"#####  {start_year}년 ~ {end_year}년 CAGR 수치 데이터표")
         df_dyn_cagr_tbl = df_dyn_cagr[["시도", "복지시설_CAGR(%)", "요양병원_CAGR(%)"]].sort_values("복지시설_CAGR(%)", ascending=False).reset_index(drop=True)
         st.dataframe(df_dyn_cagr_tbl, use_container_width=True, hide_index=True, height=350)
