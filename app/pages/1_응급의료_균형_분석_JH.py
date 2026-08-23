@@ -1,6 +1,6 @@
 import os
 import sys
-import textwrap
+import json
 from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
@@ -17,13 +17,15 @@ for p in [APP_DIR, ROOT_DIR]:
 # ================================================================
 from utils.style import inject_base_style, COLORS
 from utils.nav import render_sidebar
+import utils.components as uc
 from utils.components import (
     kpi_row,
-    region_panel,
     top5_ranking_panel,
+    region_panel,
 )
 # ================================================================
 from emergency.emergency_jh.src.config import (
+    GEOJSON_PATH,
     DOCTOR_DIR,
     DOCTOR_MAP_DIR,
     EMERGENCY_DIR,
@@ -35,27 +37,8 @@ from emergency.emergency_jh.src.config import (
 from emergency.emergency_jh.src.analysis import analysis as mv
 from emergency.emergency_jh.src.collect import collect as dc
 
-# 대한민국 17개 시·도 상대 지리적 좌표 (components.py 버블 산점도 전용)
-KOREA_GEO_LAYOUT = {
-    '서울': {'x': 3.5, 'y': 8.5},
-    '인천': {'x': 2.2, 'y': 8.3},
-    '경기': {'x': 4.2, 'y': 7.3},
-    '강원': {'x': 6.5, 'y': 8.8},
-    '충북': {'x': 5.2, 'y': 6.0},
-    '충남': {'x': 2.8, 'y': 5.3},
-    '대전': {'x': 4.0, 'y': 4.8},
-    '세종': {'x': 3.5, 'y': 5.5},
-    '경북': {'x': 7.2, 'y': 5.0},
-    '대구': {'x': 6.8, 'y': 4.0},
-    '전북': {'x': 3.6, 'y': 3.6},
-    '광주': {'x': 2.6, 'y': 2.2},
-    '전남': {'x': 3.0, 'y': 1.6},
-    '경남': {'x': 6.4, 'y': 2.8},
-    '울산': {'x': 8.2, 'y': 3.3},
-    '부산': {'x': 7.6, 'y': 2.2},
-    '제주': {'x': 3.0, 'y': -0.2},
-}
 # ================================================================
+
 YEAR_LIST = list(range(2015, 2025))
 
 load_dotenv(ROOT_DIR / ".env")
@@ -65,7 +48,7 @@ st.set_page_config(page_title="응급의료 균형 분석", page_icon="🚑", la
 mv.ensure_all_years_data(api_key, YEAR_LIST)
 
 EMERGENCY_SUBTOPICS = {
-    "🏥 인구 대비 기관 수": {
+    "인구 대비 기관 수": {
         "map_func": mv.create_emergency_map,
         "html_file": lambda yr: EMERGENCY_MAP_DIR / f"emer{yr}.html",
         "desc": "인구 10만 명당 설치된 응급의료기관 수",
@@ -73,7 +56,7 @@ EMERGENCY_SUBTOPICS = {
         "unit": "개",
         "vulnerable_type": "lowest",  # 수치가 가장 낮은 5곳
     },
-    "👨‍⚕️ 인구 대비 전문의 수": {
+    "인구 대비 전문의 수": {
         "map_func": mv.create_doctor_map,
         "html_file": lambda yr: DOCTOR_MAP_DIR / f"doc{yr}.html",
         "desc": "인구 10만 명당 활동 중인 응급의학 전문의 수",
@@ -81,7 +64,7 @@ EMERGENCY_SUBTOPICS = {
         "unit": "명",
         "vulnerable_type": "lowest",  # 수치가 가장 낮은 5곳
     },
-    "⏱️ 상위기관당 지연 환자수": {
+    "상위기관당 지연 환자수": {
         "map_func": mv.create_time_map,
         "html_file": lambda yr: TIME_MAP_DIR / f"time{yr}.html",
         "desc": "상위 응급의료기관 1곳당 2시간 이상 지연 도착 환자수",
@@ -91,45 +74,38 @@ EMERGENCY_SUBTOPICS = {
     },
 }
 
-def convert_to_bubble_format(raw_df: pd.DataFrame, metric_col: str, vulnerable_type: str, year: int) -> pd.DataFrame:
+def ensure_and_render_map(topic_key: str, year: int):
+
+    info = EMERGENCY_SUBTOPICS[topic_key]
+    html_path = info["html_file"](year)
+
+    if not html_path.exists() and info["map_func"]:
+        with st.spinner(f"🗺️ {year}년 Folium 지도를 생성 중입니다..."):
+            info["map_func"](data_year=year)
+
+    if html_path.exists():
+        with open(html_path, "r", encoding="utf-8") as f:
+            components.html(f.read(), height=430)
+    else:
+        st.info("해당 연도의 지도 파일을 불러올 수 없습니다.")
+
+def prepare_top5_ranking(raw_df: pd.DataFrame, metric_col: str, vulnerable_type: str) -> pd.DataFrame:
 
     df = raw_df.copy()
-    
-    # 1. 실제 인구수 데이터 확보
-    if "인구수" not in df.columns:
-        pop_file = POPULATION_DIR / f"pop{year}.csv"
-        if pop_file.exists():
-            pop_df = pd.read_csv(pop_file)
-            df = df.merge(pop_df[["지역", "인구수"]], on="지역", how="left")
-
-    # 버블 크기 컬럼 지정 (실제 인구수 사용)
-    df["population"] = df["인구수"]
-
-    # 2. 지역명 및 좌표(x, y) 매핑
-    df["region"] = df["지역"].astype(str)
-    df["x"] = df["region"].map(lambda r: KOREA_GEO_LAYOUT.get(r, {}).get("x", 5.0))
-    df["y"] = df["region"].map(lambda r: KOREA_GEO_LAYOUT.get(r, {}).get("y", 5.0))
-
-    # 3. 0~100 스케일 취약도(vulnerability_score) 계산
     min_v = df[metric_col].min()
     max_v = df[metric_col].max()
 
     if max_v > min_v:
         if vulnerable_type == "lowest":
-            # 낮을수록 취약 (점수 100 / 빨간색), 높을수록 안전 (점수 0 / 초록색)
-            df["vulnerability_score"] = ((max_v - df[metric_col]) / (max_v - min_v) * 100).round(1)
+            df["score"] = ((max_v - df[metric_col]) / (max_v - min_v) * 100).round(1)
         else:
-            # 높을수록 취약 (점수 100 / 빨간색), 낮을수록 안전 (점수 0 / 초록색)
-            df["vulnerability_score"] = ((df[metric_col] - min_v) / (max_v - min_v) * 100).round(1)
+            df["score"] = ((df[metric_col] - min_v) / (max_v - min_v) * 100).round(1)
     else:
-        df["vulnerability_score"] = 50.0
+        df["score"] = 50.0
 
-    return df[["region", "x", "y", "population", "vulnerability_score"]]
-
-def prepare_top5_ranking(bubble_df: pd.DataFrame) -> pd.DataFrame:
-    top5 = bubble_df.sort_values(by="vulnerability_score", ascending=False).head(5).copy()
+    df["region"] = df["지역"].astype(str)
+    top5 = df.sort_values(by="score", ascending=False).head(5).copy()
     top5["rank"] = range(1, len(top5) + 1)
-    top5["score"] = top5["vulnerability_score"]
     return top5[["rank", "region", "score"]]
 # ================================================================
 
@@ -139,6 +115,12 @@ render_sidebar(active_key="emergency_jh")
 header_left, header_right = st.columns([4, 1])
 with header_left:
     st.markdown('<div class="page-title">응급의료 균형 분석</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-size: 13px; color: #6B7280; margin-top: 4px; margin-bottom: 12px;">'
+        '전국 17개 시·도의 인구 대비 응급의료 인프라 공급 수준과 중증 응급환자 이송 지연 현황을 종합 분석합니다.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 with header_right:
     selected_year = st.selectbox(
         "기준 연도",
@@ -178,44 +160,41 @@ for tab, topic_key in zip(main_tabs, subtopic_names):
         # 탭 내부를 좌(지리적 버블 차트) / 우(취약 점수 Top 5 패널)로 배치
         left, right = st.columns([1.6, 1.4], gap="medium")
         
-        if raw_df is not None and not raw_df.empty and metric_col in raw_df.columns:
-            bubble_df = convert_to_bubble_format(
-                raw_df, 
-                metric_col, 
-                curr_topic["vulnerable_type"], 
-                selected_year
-            )
-            top5_df = prepare_top5_ranking(bubble_df)
-
-            with left:
-                with st.container(border=True):
-                    st.caption(f"📌 {curr_topic['desc']}")
-                    region_panel(
-                        bubble_df,
-                        title=f"전국 {topic_key.split(' ')[1]} 취약도 현황",
-                        tag=f"{selected_year}년 실데이터"
+        with left:
+            with st.container(border=True):
+                st.markdown(
+                    f'<div class="panel-title" style="margin-bottom:4px;">'
+                    f'전국 공간 시각화 <span class="panel-tag">{selected_year}년</span></div>',
+                    unsafe_allow_html=True,
+                )
+                st.caption(f"📌 {curr_topic['desc']}")
+                ensure_and_render_map(topic_key, year=selected_year)
+                
+        with right:
+            with st.container(border=True):
+                if raw_df is not None and not raw_df.empty and metric_col in raw_df.columns:
+                    top5_df = prepare_top5_ranking(
+                        raw_df, 
+                        metric_col, 
+                        curr_topic["vulnerable_type"]
                     )
-                    
-            with right:
-                with st.container(border=True):
-                    top5_df = prepare_top5_ranking(bubble_df)
                     top5_ranking_panel(
                         top5_df,
                         title="응급의료 취약지역 TOP 5",
                         tag=f"{topic_key.split(' ')[1]} 기준",
                         unit_label="취약도 점수(0~100)"
                     )
-        else:
-            with left:
-                st.info("해당 연도의 데이터를 불러올 수 없습니다.")
+                else:
+                    st.info("해당 연도의 TOP 5 데이터를 불러올 수 없습니다.")
 
 st.write("")
 
+st.markdown(
+    '<div class="panel-title" style="margin-bottom: 8px;">연도별 지도 핵심 지표 간 상관계수 추이 (2015~2024)</div>',
+    unsafe_allow_html=True,
+)
+
 with st.container(border=True):
-    st.markdown(
-        '<div class="panel-title">연도별 지도 핵심 지표 간 상관계수 추이 (2015~2024)</div>',
-        unsafe_allow_html=True,
-    )
 
     trend_df = mv.get_emergency_correlation_trend(YEAR_LIST)
 
@@ -281,7 +260,7 @@ with st.container(border=True):
                 xanchor="center",
                 x=0.5,
             ),
-            plot_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="white",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, Malgun Gothic, sans-serif", size=12),
         )
@@ -295,12 +274,13 @@ with st.container(border=True):
 
 st.write("")
 
-with st.container(border=True):
-    st.markdown(
-        '<div class="panel-title" style="margin-bottom: 8px;">💡 10개년 응급의료 인프라 및 이송지연 상관분석 핵심 결과</div>',
+st.markdown(
+        '<div class="panel-title" style="margin-bottom: 8px;">핵심 인사이트</div>',
         unsafe_allow_html=True,
     )
 
+with st.container(border=True):
+    
     # 1. 표준화 배경 안내
     st.info(
         "📌 **인구 10만 명당 표준화 지표 적용 이유**\n\n"

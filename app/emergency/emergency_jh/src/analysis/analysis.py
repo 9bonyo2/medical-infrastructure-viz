@@ -69,6 +69,87 @@ def get_geojson_data():
 
     return geojson_data
 
+# ================================================================
+def add_right_fixed_legend(m, min_val, max_val, label, fill_color="YlGnBu"):
+    """지도 우측 끝에 여백 없이 딱 붙는 세로형 컬러바 렌더링"""
+
+    # Folium fill_color에 맞춘 그라데이션 매핑 (위: 최대값 -> 아래: 최소값)
+    gradients = {
+        "YlGnBu": "linear-gradient(to bottom, #081d58, #225ea8, #41b6c4, #a1dab4, #ffffcc)",
+        "YlOrRd": "linear-gradient(to bottom, #800026, #e31a1c, #feb24c, #ffeda0, #ffffcc)",
+        "Reds": "linear-gradient(to bottom, #67000d, #cb181d, #fb6a4a, #fcae91, #fee5d9)",
+    }
+    gradient_css = gradients.get(fill_color, gradients["YlGnBu"])
+
+    # 5단계 눈금 수치 계산
+    step = (max_val - min_val) / 4 if max_val > min_val else 1
+    t1 = max_val
+    t2 = max_val - step
+    t3 = max_val - step * 2
+    t4 = max_val - step * 3
+    t5 = min_val
+
+    unit_str = label.split()[-1] if label else ""
+
+    legend_html = f"""
+    <style>
+        /* Folium 기본 상단 가로 범례 완전 숨김 */
+        .leaflet-top.leaflet-right, svg.legend {{
+            display: none !important;
+        }}
+    </style>
+    <div style="
+        position: fixed; 
+        top: 20px; 
+        right: 12px; 
+        z-index: 9999; 
+        pointer-events: none;
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+    ">
+        <!-- 상단 지표 라벨 -->
+        <div style="
+            font-size: 11px; 
+            font-weight: 700; 
+            color: #1E293B; 
+            margin-bottom: 6px; 
+            text-align: right;
+            text-shadow: 1px 1px 2px #ffffff;
+        ">
+            단위: {unit_str}
+        </div>
+
+        <div style="display: flex; align-items: stretch; height: 260px; gap: 6px; justify-content: flex-end;">
+            <!-- 세로 컬러 바 -->
+            <div style="
+                width: 8px; 
+                height: 100%; 
+                border-radius: 4px; 
+                background: {gradient_css};
+                box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            "></div>
+
+            <!-- 5단계 눈금 수치 -->
+            <div style="
+                display: flex; 
+                flex-direction: column; 
+                justify-content: space-between; 
+                font-size: 10px; 
+                color: #334155; 
+                font-weight: 700;
+                line-height: 1;
+                text-shadow: 1px 1px 1px #ffffff, -1px -1px 1px #ffffff;
+            ">
+                <span>{t1:.1f}</span>
+                <span>{t2:.1f}</span>
+                <span>{t3:.1f}</span>
+                <span>{t4:.1f}</span>
+                <span>{t5:.1f}</span>
+            </div>
+        </div>
+    </div>
+    """
+    m.get_root().html.add_child(folium.Element(legend_html))
+
 def render_base_map(df, columns, label, path,
                     tooltip_fields, tooltip_aliases, fill_color="YlOrRd"):
 
@@ -82,9 +163,9 @@ def render_base_map(df, columns, label, path,
         if r_name in df_dict:
             feature["properties"].update(df_dict[r_name])
 
-    m = folium.Map(location=[36.3, 127.8], zoom_start=7, tiles=None)
+    m = folium.Map(location=[35.9, 127.4], zoom_start=6.8, tiles=None)
 
-    folium.Choropleth(
+    choro = folium.Choropleth(
         geo_data=geojson_data,
         name="Choropleth",
         data=df,
@@ -93,9 +174,13 @@ def render_base_map(df, columns, label, path,
         fill_color=fill_color,
         fill_opacity=0.7,
         line_opacity=0.3,
-        legend_name=label,
+        legend_name="",
         highlight=True,
     ).add_to(m)
+
+    min_val = float(df[columns].min())
+    max_val = float(df[columns].max())
+    add_right_fixed_legend(m, min_val, max_val, label, fill_color=fill_color)
 
     folium.GeoJson(
         geojson_data,
