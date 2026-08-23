@@ -47,7 +47,7 @@ st.markdown("""
     .slider-wrapper {
         position: relative;
         width: 100%;
-        height: 60vh;
+        height: 45vh;
         min-height: 520px;
         margin-top: 50px;
         margin-bottom: 35px;
