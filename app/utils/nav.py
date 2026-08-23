@@ -17,9 +17,10 @@ from utils.style import COLORS
 PAGES = [
     {"key": "overview", "label": "프로젝트 개요", "icon": "activity", "target": "app.py"},
     {"key": "emergency_jh", "label": "응급의료 균형 분석", "icon": "heart-pulse", "target": "pages/1_응급의료_균형_분석_JH.py"},
-    {"key": "aging", "label": "고령화와 노인의료 분석", "icon": "people", "target": "pages/2_고령화와_노인의료_분석.py"},
-    {"key": "birth", "label": "출산율과 소아과 분석", "icon": "emoji-smile", "target": "pages/3_출산율과_소아과_분석.py"},
-    {"key": "top5", "label": "의료 취약지역 TOP 5", "icon": "exclamation-triangle", "target": "pages/4_의료_취약지역_TOP5.py"},
+    {"key": "emergency_by", "label": "응급의료 균형 분석", "icon": "heart-pulse", "target": "pages/2_응급의료_고령_BY.py"},
+    {"key": "aging", "label": "고령화와 노인의료 분석", "icon": "people", "target": "pages/3_고령화와_노인의료_분석.py"},
+    {"key": "birth", "label": "출산율과 소아과 분석", "icon": "emoji-smile", "target": "pages/4_출산율과_소아과_분석.py"},
+    {"key": "top5", "label": "의료 취약지역 TOP 5", "icon": "exclamation-triangle", "target": "pages/5_의료_취약지역_TOP5.py"},
 ]
 
 
