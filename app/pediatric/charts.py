@@ -4,6 +4,11 @@ import seaborn as sns
 import streamlit as st
 
 from pediatric.config import METRIC_LABELS
+import matplotlib.font_manager as fm
+
+for font_path in fm.findSystemFonts():
+    if "Nanum" in font_path:
+        fm.fontManager.addfont(font_path)
 
 plt.rcParams["font.family"] = "NanumGothic"
 plt.rcParams["axes.unicode_minus"] = False
