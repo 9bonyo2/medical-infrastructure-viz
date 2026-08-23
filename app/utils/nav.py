@@ -15,14 +15,14 @@ from utils.style import COLORS
 
 # key: 내부 식별자 / label: 화면 표시 텍스트 / icon: bootstrap-icons 이름 / target: 실제 파일 경로
 PAGES = [
-    {"key": "overview", "label": "프로젝트 개요", "icon": "activity", "target": "home.py"},
-    {"key": "emergency_jh", "label": "응급의료 균형 (JH)", "icon": "heart-pulse", "target": "pages/1_응급의료_균형_JH.py"},
-    {"key": "emergency_by", "label": "응급의료 고령 (BY)", "icon": "heart-pulse-fill", "target": "pages/2_응급의료_균형_BY.py"},
-    {"key": "aging_sj", "label": "고령화 의료시설 (SJ)", "icon": "people", "target": "pages/3_고령화_의료시설_SJ.py"},
-    {"key": "aging_sy", "label": "고령화 의료시설 (SY)", "icon": "person-gear", "target": "pages/4_고령화_의료시설_SY.py"},
-    {"key": "aging_jy", "label": "고령화 의료시설 (JY)", "icon": "building", "target": "pages/5_고령화_의료시설_JY.py"},
-    {"key": "pediatric_jh", "label": "출산율과 소아과 (JH)", "icon": "emoji-smile", "target": "pages/6_출산율_소아과_JH.py"},
-    {"key": "pediatric_dy", "label": "출산율과 소아과 (DY)", "icon": "emoji-smile-fill", "target": "pages/7_출산율_소아과_DY.py"},
+    {"key": "overview", "label": "메인 홈 (Home)", "icon": "activity", "target": "home.py"},
+    {"key": "emergency_jh", "label": "응급의료 균형 분석", "icon": "heart-pulse", "target": "pages/1_응급의료_균형_JH.py"},
+    {"key": "emergency_by", "label": "응급의료 고령화 분석", "icon": "heart-pulse-fill", "target": "pages/2_응급의료_균형_BY.py"},
+    {"key": "aging_sj", "label": "고령화율 분석", "icon": "people", "target": "pages/3_고령화_의료시설_SJ.py"},
+    {"key": "aging_jy", "label": "고령 인프라 수급 균형 추이", "icon": "building", "target": "pages/5_고령화_의료시설_JY.py"},
+    {"key": "aging_sy", "label": "고령 인구대비 인프라 추이", "icon": "person-gear", "target": "pages/4_고령화_의료시설_SY.py"},
+    {"key": "pediatric_jh", "label": "아동 수 대비 소아과 현황", "icon": "emoji-smile", "target": "pages/6_출산율_소아과_JH.py"},
+    {"key": "pediatric_dy", "label": "출산율 대비 소아과 현황", "icon": "emoji-smile-fill", "target": "pages/7_출산율_소아과_DY.py"},
 ]
 
 
