@@ -32,7 +32,7 @@ PAGES = [
         "key": "emergency_by",
         "label": "응급의료 고령화 분석",
         "icon": "heart-pulse-fill",
-        "target": "pages/2_응급의료_균형_BY.py",
+        "target": "pages/2_응급의료_고령_BY.py",
     },
     {
         "key": "aging_sj",
@@ -65,6 +65,7 @@ PAGES = [
         "target": "pages/7_출산율_소아과_DY.py",
     },
 ]
+
 def render_sidebar(active_key: str):
     """공통 사이드바를 렌더링하고, 메뉴 선택 시 해당 페이지로 전환합니다."""
     with st.sidebar:

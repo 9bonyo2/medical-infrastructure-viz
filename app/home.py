@@ -1,20 +1,7 @@
 #  해당 페이지는 엔드리 포인트가 되는 파일이기도 하지만 대쉬보드 페이지 코드라고 생각해주시면 됩니다.
 import streamlit as st
-
 from utils.style import inject_base_style
 from utils.nav import render_sidebar
-from utils.components import (
-    kpi_card,
-    region_panel,
-    top5_ranking_panel,
-    quicklink_card,
-    process_flow,
-)
-from utils.sample_data import (
-    get_overview_kpis,
-    get_region_vulnerability_df,
-    get_top5_vulnerable_df,
-)
 
 # ── 페이지 설정 ────────────────────────────────────────────────────────
 st.set_page_config(
@@ -70,12 +57,11 @@ st.markdown("""
 
     .slides-container {
         display: flex;
-        width: 400%; /* 4개 슬라이드 (100% * 4) */
+        width: 400%;
         height: 100%;
         animation: slideAnimation 20s infinite ease-in-out;
     }
 
-    /* 슬라이드 별 배경 이미지 및 레이아웃 */
     .slide {
         width: 25%;
         height: 100%;
@@ -105,7 +91,6 @@ st.markdown("""
                     url('https://images.unsplash.com/photo-1504813184591-01572f98c85f?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
     }
 
-    /* 슬라이드 텍스트 스타일링 */
     .hero-title {
         font-size: 38px;
         font-weight: 800;
@@ -123,17 +108,6 @@ st.markdown("""
         font-weight: 400;
     }
 
-# ── 상세 분석 영역 바로가기 ──────────────────────────────────────────────
-# TODO: 추후에 각 카드 클릭 시 해당 페이지로 이동하도록 기능 추가 필요
-st.markdown("##### 상세 분석 영역 바로가기")
-q1, q2 = st.columns(2, gap="medium")
-with q1:
-    quicklink_card("🩺", "응급의료 균형", "인구 대비 권역별 응급의료기관의 위치와 병상 수용 능력 정보 확인",
-                    border_color="#2F6FED")
-with q2:
-    quicklink_card("👥", "고령화와 노인의료", "급증하는 고령인구와 시니어 맞춤 요양·복지·의료시설의 수급 미스매치 비교",
-                    border_color="#12B886")
-
     /* 자동 전환 CSS 애니메이션 Keyframes (4개 슬라이드 루프) */
     @keyframes slideAnimation {
         0%, 20%   { transform: translateX(0%); }
@@ -142,7 +116,6 @@ with q2:
         75%, 95%  { transform: translateX(-75%); }
         100%      { transform: translateX(0%); }
     }
-
 
     /* Streamlit 기본 세로 간격 조정 */
     div[data-testid="stVerticalBlock"] {
@@ -167,11 +140,6 @@ with q2:
         z-index: 10;
     }
 
-# ── 프로젝트 분석 흐름 ───────────────────────────────────────────────────
-# TODO: 해당 항목은 논의 후 구체화가 필요해 보임.
-with st.container(border=True):
-    st.markdown("##### 프로젝트 분석 흐름")
-    process_flow(["데이터 수집", "데이터 정제 및 표준화", "지역별 지표 분석", "의료 취약점수 산출", "시각화 및 결과 해석"])
     .section-header {
         font-size: 22px;
         font-weight: 700;
@@ -182,7 +150,7 @@ with st.container(border=True):
         text-align: center;
     }
 
-    /* 3. 카드 래퍼 및 버튼 스타일 */
+    /* 3. 카드 래퍼 및 버튼 스타일 (카드 전체를 클릭 가능하게 만드는 핵심 부분) */
     .card-wrapper {
         position: relative;
         width: 100%;
@@ -204,13 +172,14 @@ with st.container(border=True):
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
         display: flex;
         align-items: center;
-        justify-content: center; /* 카드 내부 전체 가운데 정렬 */
+        justify-content: center;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         z-index: 1;
         box-sizing: border-box;
+        cursor: pointer;
     }
-    
+
     .card-wrapper:hover .card-box {
         transform: translateY(-3px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
@@ -221,7 +190,7 @@ with st.container(border=True):
         display: flex;
         align-items: center;
         justify-content: center;
-        text-align: center; /* 텍스트 가운데 정렬 */
+        text-align: center;
         width: 100%;
     }
 
@@ -229,7 +198,7 @@ with st.container(border=True):
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center; /* 텍스트 박스 요소들 중앙 배치 */
+        align-items: center;
         width: 100%;
     }
     .card-subtext {
@@ -244,6 +213,7 @@ with st.container(border=True):
         color: #1E293B;
     }
 
+    /* 카드 전체 영역을 뒤덮는 투명 버튼 — 이게 "카드 어디를 눌러도 이동"을 만드는 핵심 */
     .card-wrapper [data-testid="stElementContainer"]:has(div[data-testid="stButton"]) {
         position: absolute !important;
         top: 0 !important;
@@ -283,14 +253,12 @@ with st.container(border=True):
         color: transparent !important;
     }
     </style>
-""", 
-unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # ── 1. 상단: 좌우 슬라이드 배너 (4개 배경) ────────────────
 st.markdown("""
     <div class="slider-wrapper">
         <div class="slides-container">
-            <!-- Slide 1 -->
             <div class="slide slide-1">
                 <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
                 <div class="hero-subtitle">
@@ -298,7 +266,6 @@ st.markdown("""
                     대한민국 시·도별 인구 구조 변화와 필수 의료 시설 공급 수준을 정밀 분석하여 의료 인프라 불균형 해소를 위한 인사이트를 제공합니다.
                 </div>
             </div>
-            <!-- Slide 2 -->
             <div class="slide slide-2">
                 <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
                 <div class="hero-subtitle">
@@ -306,7 +273,6 @@ st.markdown("""
                     대한민국 시·도별 인구 구조 변화와 필수 의료 시설 공급 수준을 정밀 분석하여 의료 인프라 불균형 해소를 위한 인사이트를 제공합니다.
                 </div>
             </div>
-            <!-- Slide 3 -->
             <div class="slide slide-3">
                 <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
                 <div class="hero-subtitle">
@@ -314,7 +280,6 @@ st.markdown("""
                     대한민국 시·도별 인구 구조 변화와 필수 의료 시설 공급 수준을 정밀 분석하여 의료 인프라 불균형 해소를 위한 인사이트를 제공합니다.
                 </div>
             </div>
-            <!-- Slide 4 -->
             <div class="slide slide-4">
                 <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
                 <div class="hero-subtitle">
@@ -329,7 +294,6 @@ st.markdown("""
 # ── 2. 하단: CONTENTS (섹션별 컬럼 구분) ─────────────────────────
 st.markdown('<div class="contents-title">CONTENTS</div>', unsafe_allow_html=True)
 
-# 카테고리별 데이터 정의
 sections = [
     {
         "title": "응급의료",
@@ -342,7 +306,7 @@ sections = [
             {
                 "sub": "10개년 데이터의 상관계수 변동 패턴을 분석",
                 "title": "응급의료 고령화 분석",
-                "target": "pages/2_응급의료_균형_BY.py",
+                "target": "pages/2_응급의료_고령_BY.py",
             },
         ]
     },
@@ -385,7 +349,6 @@ sections = [
 
 cols = st.columns(3, gap="large")
 
-# 카드 렌더링 헬퍼 함수
 def render_card(card, key_suffix):
     st.markdown('<div class="card-wrapper">', unsafe_allow_html=True)
     st.markdown(
@@ -405,7 +368,6 @@ def render_card(card, key_suffix):
         st.switch_page(card["target"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 컬럼별 섹션 타이틀 및 카드 배치
 for idx, section in enumerate(sections):
     with cols[idx]:
         st.markdown(f'<div class="section-header">{section["title"]}</div>', unsafe_allow_html=True)
