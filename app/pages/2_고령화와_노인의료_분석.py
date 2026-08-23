@@ -106,7 +106,7 @@ def render_real_aging_kpi_row() -> None:
 
 # ── 타이틀 ────────────────────────────────────────────────────────────
 st.markdown('<div class="page-title">고령화율과 노인복지센터/요양병원 수 간의 상관관계 분석</div>', unsafe_allow_html=True)
-st.markdown('<div class="page-subtitle">지역별 고령인구비율과 노인복지시설·요양병원의 공급 수준·증가 속도를 비교하여, 의료 인프라가 취약한 지역과 그 상관관계 변화 추이(2015~2024)를 분석합니다.</div><br/>', unsafe_allow_html=True)
+st.markdown('<div class="page-subtitle">> 지역별 고령인구비율과 노인복지시설·요양병원의 공급 수준·증가 속도를 비교하여, 의료 인프라가 취약한 지역과 그 상관관계 변화 추이(2015~2024)를 분석합니다.</div><br/>', unsafe_allow_html=True)
 
 # ── 상단 KPI 4개 (서연 추가분: 고령화 파트 실데이터로 교체) ──────────────
 render_real_aging_kpi_row()

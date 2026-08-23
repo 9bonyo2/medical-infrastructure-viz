@@ -167,18 +167,17 @@ def render_top5_tab() -> None:
             )
 
     with right:
-        # 서연 수정분: 기본 st.container(border=True) 박스 제거 — top5_ranking_panel() 자체
-        # 스타일(배지·막대 등)만 그대로 렌더링해 이중 박스처럼 보이지 않게 한다.
         top5 = gap_df.sort_values("격차점수", ascending=False).head(5).reset_index(drop=True)
         top5["rank"] = top5.index + 1
         top5["region"] = top5["시도"]
         top5["score"] = top5["격차점수"].round(2)
-        top5_ranking_panel(
-            top5[["rank", "region", "score"]],
-            title="의료 취약지역 TOP 5",
-            tag="격차점수 · 2015~2024",
-            unit_label="격차점수",
-        )
+        with st.container(border=True):
+            top5_ranking_panel(
+                top5[["rank", "region", "score"]],
+                title="의료 취약지역 TOP 5",
+                tag="격차점수 · 2015~2024",
+                unit_label="격차점수",
+            )
 
     st.write("")
     st.divider()
