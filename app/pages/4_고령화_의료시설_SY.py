@@ -21,7 +21,7 @@ st.set_page_config(page_title="고령화율과 노인복지센터/요양병원 �
 inject_base_style()
 
 # 사이드바에서 어느 항목으로 표시할건지
-render_sidebar(active_key="aging")
+render_sidebar(active_key="aging_sy")
 
 # 데이터 가져올 디렉토리 경로
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "aging" / "processed"
