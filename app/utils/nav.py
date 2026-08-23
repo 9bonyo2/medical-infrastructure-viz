@@ -21,7 +21,7 @@ PAGES = [
     {"key": "emergency_dy", "label": "응급의료 균형 (DY)", "icon": "heart-pulse", "target": "pages/2_응급의료_균형_DY.py"},
     {"key": "aging_sj", "label": "고령화 의료시설 (SJ)", "icon": "people", "target": "pages/3_고령화_의료시설_SJ.py"},
     {"key": "aging_jy", "label": "고령 복지·의료 인프라 분석", "icon": "people", "target": "pages/5_고령화_의료시설_JY.py"},
-    {"key": "aging_sy", "label": "고령화 의료시설 (SY)", "icon": "people", "target": "pages/4_고령화_의료시설_SY.py"},
+    {"key": "aging_sy", "label": "고령인구대비 복지·의료 인프라 균형 분석", "icon": "people", "target": "pages/4_고령화_의료시설_SY.py"},
     {"key": "pediatric_jh", "label": "출산율과 소아과 (JH)", "icon": "emoji-smile", "target": "pages/6_출산율_소아과_JH.py"},
     {"key": "pediatric_dy", "label": "출산율과 소아과 (DY)", "icon": "emoji-smile", "target": "pages/7_출산율_소아과_DY.py"}
 ]
