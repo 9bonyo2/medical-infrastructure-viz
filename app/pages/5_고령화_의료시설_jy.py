@@ -1,10 +1,12 @@
 import streamlit as st
+from streamlit_folium import st_folium
 import pandas as pd
 import json
 import os
 import sys
 import plotly.express as px
 import plotly.graph_objects as go
+import folium
 
 # 프로젝트 루트 및 app 경로를 sys.path에 주입하여 모듈 경로 검색 보장
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -17,7 +19,6 @@ for path in [project_root, app_root]:
 from utils.style import inject_base_style
 from utils.nav import render_sidebar
 from src.aging.analysis.infra_balance import run_all_pipeline
-from utils.sample_data import REGION_LAYOUT
 
 # 시도 표준 명칭 매핑용 사전 정의
 SIDO_MAP = {
@@ -50,7 +51,7 @@ def clean_sido(sido_str):
             return v
     return s_base
 
-st.set_page_config(page_title="고령화와 노인의료 분석", page_icon="👵", layout="wide")
+st.set_page_config(page_title="고령 복지·의료 인프라 분석", page_icon="👵", layout="wide")
 
 # 기본 스타일 및 사이드바 렌더링
 inject_base_style()
@@ -113,7 +114,7 @@ def render_kpi_card(title, value, subtext, icon="🏢", trend="up"):
 # ── [1. 상단 섹션] ───────────────────────────────────────────────────
 title_col, year_col = st.columns([3, 1])
 with title_col:
-    st.markdown('<div class="page-title" style="margin-bottom: 2px;">고령화와 노인의료 분석</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-title" style="margin-bottom: 2px;">고령 복지·의료 인프라 분석</div>', unsafe_allow_html=True)
     st.markdown('<div class="page-subtitle" style="margin-bottom: 20px;">지역별 노인복지시설과 요양병원의 수급 현황을 정밀 비교 분석하여 공급 불균형 상태를 진단합니다.</div>', unsafe_allow_html=True)
 
 with year_col:
@@ -191,46 +192,36 @@ with kpi_cols[3]:
 st.write("")
 
 # ── [2. 중단 섹션 - 지도 시각화 및 TOP 3 / BOTTOM 3 요약 표] ─────────────
-st.markdown("###  지역별 노인 인프라 공급 현황")
+st.markdown("###  지역별 고령 복지·의료 인프라 공급 현황")
 
 # 최상위 탭 구성
 tab_med, tab_wel, tab_bal = st.tabs(["의료현황", "복지현황", "균형현황"])
 
-# REGION_LAYOUT 매핑을 위한 좌표 처리
-REV_SIDO_MAP = {v: k for k, v in SIDO_MAP.items()}
-df_year["시도_단축"] = df_year["시도"].map(REV_SIDO_MAP)
-df_year["x"] = df_year["시도_단축"].map(lambda s: REGION_LAYOUT.get(s, (None, None))[0])
-df_year["y"] = df_year["시도_단축"].map(lambda s: REGION_LAYOUT.get(s, (None, None))[1])
-
-# 버블맵 그리는 헬퍼 함수
-def draw_bubble_map(df, size_col, color_col, color_scale, color_label):
-    fig = px.scatter(
-        df,
-        x="x",
-        y="y",
-        size=size_col,
-        color=color_col,
-        color_continuous_scale=color_scale,
-        text="시도_단축",
-        size_max=45,
-        labels={color_col: color_label}
+# Folium 지도 그리는 헬퍼 함수
+def draw_folium_map(df, geo_data, fill_column, fill_color, legend_label):
+    m = folium.Map(
+        location=[36.3, 127.8],
+        zoom_start=6.5,
+        tiles="CartoDB positron",
+        zoom_control=False,
+        scrollWheelZoom=False,
+        dragging=True
     )
-    fig.update_traces(
-        textposition="middle center",
-        textfont=dict(color="white", size=11, family="Arial Black"),
-        marker=dict(line=dict(width=1, color="grey"))
-    )
-    fig.update_layout(
-        height=450,
-        margin=dict(l=10, r=10, t=10, b=10),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
-        coloraxis_colorbar=dict(title=color_label, thickness=12),
-        showlegend=False,
-    )
-    return fig
+    
+    folium.Choropleth(
+        geo_data=geo_data,
+        name="choropleth",
+        data=df,
+        columns=["시도", fill_column],
+        key_on="feature.properties.CTP_KOR_NM",
+        fill_color=fill_color,
+        fill_opacity=0.7,
+        line_opacity=0.3,
+        legend_name=legend_label,
+        highlight=True,
+    ).add_to(m)
+    
+    st_folium(m, height=450, use_container_width=True, returned_objects=[])
 
 # 1) 의료현황 탭
 with tab_med:
@@ -238,8 +229,7 @@ with tab_med:
     with col_map:
         with st.container(border=True):
             st.markdown('<div class="panel-title" style="margin-bottom:10px;"> 지역별 요양병원 공급 분포</div>', unsafe_allow_html=True)
-            fig_med = draw_bubble_map(df_year, "요양병원_수", "요양병원_수", "Blues", "요양병원 수")
-            st.plotly_chart(fig_med, use_container_width=True, key="bubble_map_med")
+            draw_folium_map(df_year, geojson_data, "요양병원_수", "Blues", "요양병원 수")
             
     with col_tbl:
         # 상단 상위 TOP 3
@@ -251,7 +241,7 @@ with tab_med:
             
         # 하단 하위 BOTTOM 3
         with st.container(border=True):
-            st.markdown(f" **{selected_year}년 요양병원 공급 하위 BOTTOM 3**")
+            st.markdown(f" **{selected_year}년 요양병원 공급 하위 TOP 3**")
             df_med_bottom3 = df_year[["시도", "요양병원_수"]].sort_values("요양병원_수", ascending=True).head(3).reset_index(drop=True)
             df_med_bottom3.index += 1
             st.dataframe(df_med_bottom3, use_container_width=True)
@@ -262,8 +252,7 @@ with tab_wel:
     with col_map:
         with st.container(border=True):
             st.markdown('<div class="panel-title" style="margin-bottom:10px;">지역별 복지시설 공급 분포</div>', unsafe_allow_html=True)
-            fig_wel = draw_bubble_map(df_year, "복지시설_합계", "복지시설_합계", "Oranges", "복지시설 수")
-            st.plotly_chart(fig_wel, use_container_width=True, key="bubble_map_wel")
+            draw_folium_map(df_year, geojson_data, "복지시설_합계", "Oranges", "복지시설 수")
             
     with col_tbl:
         # 상단 상위 TOP 3
@@ -275,7 +264,7 @@ with tab_wel:
             
         # 하단 하위 BOTTOM 3
         with st.container(border=True):
-            st.markdown(f" **{selected_year}년 노인복지시설 공급 하위 BOTTOM 3**")
+            st.markdown(f" **{selected_year}년 노인복지시설 공급 하위 TOP 3**")
             df_wel_bottom3 = df_year[["시도", "복지시설_합계"]].sort_values("복지시설_합계", ascending=True).head(3).reset_index(drop=True)
             df_wel_bottom3.index += 1
             st.dataframe(df_wel_bottom3, use_container_width=True)
@@ -287,8 +276,7 @@ with tab_bal:
         with st.container(border=True):
             st.markdown('<div class="panel-title" style="margin-bottom:10px;">지역별 의료-복지 인프라 불균형 분포</div>', unsafe_allow_html=True)
             df_year["절대_치우침_지수"] = df_year["인프라_치우침_지수"].abs()
-            fig_bal = draw_bubble_map(df_year, "절대_치우침_지수", "절대_치우침_지수", ["#2E7D32", "#FFA000", "#D32F2F"], "불균형 지수")
-            st.plotly_chart(fig_bal, use_container_width=True, key="bubble_map_bal")
+            draw_folium_map(df_year, geojson_data, "절대_치우침_지수", "RdYlGn_r", "불균형 지수")
             
     with col_tbl:
         # 상단 균형 우수 TOP 3
@@ -302,7 +290,7 @@ with tab_bal:
             
         # 하단 불균형 심각 BOTTOM 3
         with st.container(border=True):
-            st.markdown(f" **{selected_year}년 인프라 불균형 심각 BOTTOM 3**")
+            st.markdown(f" **{selected_year}년 인프라 불균형 심각 TOP 3**")
             df_bal_bottom3 = df_year[["시도", "인프라_치우침_지수"]].copy()
             df_bal_bottom3["절대_치우침_지수"] = df_bal_bottom3["인프라_치우침_지수"].abs()
             df_bal_bottom3 = df_bal_bottom3.sort_values("절대_치우침_지수", ascending=False).head(3).reset_index(drop=True)
@@ -312,18 +300,18 @@ with tab_bal:
 st.write("")
 
 # ── [3. 하단 섹션 - 상세 데이터 항목 3대 분석] ───────────────────────────
-st.markdown("###  인프라 비교 상세 분석")
+st.markdown("###  상세 분석")
 
 tab_s1, tab_s2, tab_s3 = st.tabs([
     "1. 정규화 비율 비교",
-    "2. 복지 vs 요양 산점도",
-    "3. 10년 CAGR 종합분석"
+    "2. 복지·의료 산점도",
+    "3. CAGR 종합분석"
 ])
 
 # 핵심 인사이트 렌더링 헬퍼 함수
 def render_insight_grid(insights):
     st.write("")
-    st.markdown("#####  핵심 분석 인사이트 요약")
+    st.markdown("#####  핵심 인사이트")
     cols = st.columns(2)
     for i, ins in enumerate(insights):
         col_idx = i % 2
@@ -394,7 +382,7 @@ with tab_s1:
 with tab_s2:
     col_title, col_sel = st.columns([3, 1])
     with col_title:
-        st.markdown("##### 2. 복지시설 vs 요양병원 공급 추이 산점도")
+        st.markdown("##### 2. 복지·의료 공급 추이 산점도")
     with col_sel:
         s2_years = sorted(list(df_normalized["연도"].unique()))
         selected_year_s2 = st.selectbox(
@@ -406,7 +394,7 @@ with tab_s2:
         
     df_s2 = df_normalized[df_normalized["연도"] == selected_year_s2].copy()
     
-    st.markdown(f"**{selected_year_s2}년 노인복지시설 vs 요양병원 상관 관계 및 치우침 현황**")
+    st.markdown(f"**{selected_year_s2}년 복지시설·의료시설 상관 관계 및 치우침 현황**")
     col_s2_scatter, col_s2_table = st.columns([2, 1])
     
     with col_s2_scatter:
@@ -441,7 +429,7 @@ with tab_s2:
 
 # ── 3. 10년 CAGR 종합분석 탭 ───────────────────────────────────────
 with tab_s3:
-    st.markdown("##### 3. 연도 구간별 복지/의료시설 CAGR 동적 변화 분석")
+    st.markdown("##### 3. 복지·의료 CAGR 동적 변화 분석")
     
     min_year = int(df_normalized["연도"].min())
     max_year = int(df_normalized["연도"].max())
