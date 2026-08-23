@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from emergency.emergency_jh.src.config import (
+from src.emergency.config import (
     DOCTOR_DIR, EMERGENCY_DIR, POPULATION_DIR, TIME_DIR
 )
 

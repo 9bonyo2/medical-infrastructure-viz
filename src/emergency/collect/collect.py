@@ -1,8 +1,7 @@
 import os
-import json
 import requests
 import pandas as pd
-from emergency.emergency_jh.src.preprocess.preprocess import(
+from src.emergency.preprocess.preprocess import(
     to_csv_doctor,
     to_csv_emergency,
     to_csv_population,

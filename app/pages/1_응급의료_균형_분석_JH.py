@@ -24,7 +24,7 @@ from utils.components import (
     region_panel,
 )
 # ================================================================
-from emergency.emergency_jh.src.config import (
+from src.emergency.config import (
     GEOJSON_PATH,
     DOCTOR_DIR,
     DOCTOR_MAP_DIR,
@@ -34,8 +34,8 @@ from emergency.emergency_jh.src.config import (
     TIME_DIR,
     TIME_MAP_DIR,
 )
-from emergency.emergency_jh.src.analysis import analysis as mv
-from emergency.emergency_jh.src.collect import collect as dc
+from src.emergency.analysis import analysis as mv
+from src.emergency.collect import collect as dc
 
 # ================================================================
 

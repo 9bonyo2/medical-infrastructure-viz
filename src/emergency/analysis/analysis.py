@@ -6,8 +6,8 @@ import pandas as pd
 import folium
 import streamlit as st
 from scipy import stats
-from emergency.emergency_jh.src.collect import collect as dc
-from emergency.emergency_jh.src.config import (
+from src.emergency.collect import collect as dc
+from src.emergency.config import (
     DOCTOR_DIR,
     DOCTOR_MAP_DIR,
     EMERGENCY_DIR,
