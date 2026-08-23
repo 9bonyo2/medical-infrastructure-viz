@@ -1,3 +1,4 @@
+#  해당 페이지는 엔드리 포인트가 되는 파일이기도 하지만 대쉬보드 페이지 코드라고 생각해주시면 됩니다.
 import streamlit as st
 from utils.style import inject_base_style
 from utils.nav import render_sidebar
@@ -57,12 +58,11 @@ st.markdown("""
 
     .slides-container {
         display: flex;
-        width: 400%; /* 4개 슬라이드 (100% * 4) */
+        width: 400%;
         height: 100%;
         animation: slideAnimation 12s infinite ease-in-out;
     }
 
-    /* 슬라이드 별 배경 이미지 및 레이아웃 */
     .slide {
         width: 25%;
         height: 100%;
@@ -95,9 +95,7 @@ st.markdown("""
         background: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.65)), 
                     url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
     }
-
     
-    /* 슬라이드 이미지 속 텍스트 폰트 스타일 설정 */
     .hero-title {
         font-size: 50px;
         font-weight: 800;
@@ -161,8 +159,7 @@ st.markdown("""
         text-align: center;
     }
 
-    
-    /* 7개 카드의 공백 조절 */
+    /* 3. 카드 래퍼 및 버튼 스타일 (카드 전체를 클릭 가능하게 만드는 핵심 부분) */
     .card-wrapper {
         position: relative;
         width: 100%;
@@ -184,13 +181,14 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
         display: flex;
         align-items: center;
-        justify-content: center; /* 카드 내부 전체 가운데 정렬 */
+        justify-content: center;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         z-index: 1;
         box-sizing: border-box;
+        cursor: pointer;
     }
-    
+
     .card-wrapper:hover .card-box {
         transform: translateY(-3px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
@@ -201,7 +199,7 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: center;
-        text-align: center; /* 텍스트 가운데 정렬 */
+        text-align: center;
         width: 100%;
     }
 
@@ -209,7 +207,7 @@ st.markdown("""
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center; /* 텍스트 박스 요소들 중앙 배치 */
+        align-items: center;
         width: 100%;
     }
     .card-subtext {
@@ -224,6 +222,7 @@ st.markdown("""
         color: #1E293B;
     }
 
+    /* 카드 전체 영역을 뒤덮는 투명 버튼 — 이게 "카드 어디를 눌러도 이동"을 만드는 핵심 */
     .card-wrapper [data-testid="stElementContainer"]:has(div[data-testid="stButton"]) {
         position: absolute !important;
         top: 0 !important;
@@ -270,28 +269,24 @@ st.markdown("""
 st.markdown("""
     <div class="slider-wrapper">
         <div class="slides-container">
-            <!-- Slide 1 -->
             <div class="slide slide-1">
                 <div class="hero-title">데이터로 진단하는 대한민국 의료·복지 격차</div>
                 <div class="hero-subtitle">
                     10개년 공공데이터와 정규화 알고리즘을 통해 지역별 인프라 수급 불균형과 취약지를 입체적으로 조명합니다.
                 </div>
             </div>
-            <!-- Slide 2 -->
             <div class="slide slide-2">
                 <div class="hero-title">생명과 직결되는 응급·필수의료 접근성의 재발견</div>
                 <div class="hero-subtitle">
                     대도시권 쏠림 현상과 응급의료 격차를 해소하고, 객관적 지표에 기반한 실효성 있는 정책 대안을 제시합니다.
                 </div>
             </div>
-            <!-- Slide 3 -->
             <div class="slide slide-3">
                 <div class="hero-title">초고령사회, 고령 복지·의료 인프라의 균형을 찾다</div>
                 <div class="hero-subtitle">
                     급증하는 고령 인구 대비 요양병원과 노인복지시설의 지역별 수급 상태를 진단하고 미래 수요를 예측합니다.
                 </div>
             </div>
-            <!-- Slide 4 -->
             <div class="slide slide-4">
                 <div class="hero-title">저출산 파고 속, 소아청소년과 인프라 붕괴에 대응하다</div>
                 <div class="hero-subtitle">
@@ -306,7 +301,6 @@ st.markdown("""
 # ── 2. 하단: CONTENTS (카테고리별 컬럼 구분) ─────────────────────────
 st.markdown('<div class="contents-title">CONTENTS</div>', unsafe_allow_html=True)
 
-# 카테고리별 데이터 정의
 sections = [
     {
         "title": "응급의료",
@@ -349,7 +343,7 @@ sections = [
             {
                 "sub": "소아청소년과 인프라의 위축 경향성을 파악",
                 "title": "아동 수 대비 소아과 현황",
-                "target": "pages/6_출산율_소아과_JH.py",
+                "target": "pages/6_출산율과_소아과_JH.py",
             },
             {
                 "sub": "저출산 추세 속에서 소아청소년과 인프라의 위축 경향성을 파악",
@@ -362,7 +356,6 @@ sections = [
 
 cols = st.columns(3, gap="large")
 
-# 카드 렌더링 헬퍼 함수
 def render_card(card, key_suffix):
     st.markdown('<div class="card-wrapper">', unsafe_allow_html=True)
     st.markdown(
@@ -382,7 +375,6 @@ def render_card(card, key_suffix):
         st.switch_page(card["target"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-# 컬럼별 섹션 타이틀 및 카드 배치
 for idx, section in enumerate(sections):
     with cols[idx]:
         st.markdown(f'<div class="section-header">{section["title"]}</div>', unsafe_allow_html=True)
