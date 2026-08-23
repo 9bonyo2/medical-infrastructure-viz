@@ -10,3 +10,5 @@ folium>=0.15.0
 streamlit-folium>=0.20.0
 requests>=2.31.0
 python-dotenv>=1.0.0
+matplotlib>=3.8.0  # pediatric/charts.py 에서 사용
+seaborn>=0.13.0
