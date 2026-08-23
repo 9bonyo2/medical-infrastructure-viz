@@ -42,6 +42,7 @@ st.markdown("""
         font-weight: 500;
     }
 
+    
     /* 1. 상단 슬라이드 배너 (Carousel) 컨테이너 */
     .slider-wrapper {
         position: relative;
@@ -59,7 +60,7 @@ st.markdown("""
         display: flex;
         width: 400%;
         height: 100%;
-        animation: slideAnimation 20s infinite ease-in-out;
+        animation: slideAnimation 12s infinite ease-in-out;
     }
 
     .slide {
@@ -75,24 +76,28 @@ st.markdown("""
     }
 
     .slide-1 {
+        /* 주제: 데이터 기반 공공 인프라 진단 (데이터 분석 및 대시보드 느낌) */
         background: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.65)), 
-                    url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+                    url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
     }
     .slide-2 {
+        /* 주제: 응급의료 및 필수 진료 접근성 (병원 응급실, 의료 현장 느낌) */
         background: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.65)), 
-                    url('https://images.unsplash.com/photo-1581594693702-fbdc51b2763b?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+                    url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
     }
     .slide-3 {
+        /* 주제: 초고령사회 대비 복지 인프라 (시니어 케어, 요양 및 복지 느낌) */
         background: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.65)), 
-                    url('https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+                    url('https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
     }
     .slide-4 {
+        /* 주제: 저출산 대응 소아의료 체계 (안정적인 소아 의료/병원 배경) */
         background: linear-gradient(rgba(15, 23, 42, 0.65), rgba(15, 23, 42, 0.65)), 
-                    url('https://images.unsplash.com/photo-1504813184591-01572f98c85f?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
+                    url('https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1600&auto=format&fit=crop') center/cover no-repeat;
     }
-
+    
     .hero-title {
-        font-size: 38px;
+        font-size: 50px;
         font-weight: 800;
         color: #FFFFFF;
         margin-bottom: 12px;
@@ -100,14 +105,15 @@ st.markdown("""
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
     .hero-subtitle {
-        font-size: 16px;
+        font-size: 20px;
         color: #E2E8F0;
-        max-width: 850px;
+        max-width: 990px;
         margin: 0 auto;
         line-height: 1.7;
         font-weight: 400;
     }
 
+    
     /* 자동 전환 CSS 애니메이션 Keyframes (4개 슬라이드 루프) */
     @keyframes slideAnimation {
         0%, 20%   { transform: translateX(0%); }
@@ -126,6 +132,7 @@ st.markdown("""
         padding-bottom: 0px !important;
     }
 
+    
     /* 2. CONTENTS 타이틀 및 섹션 헤더 */
     .contents-title {
         text-align: center;
@@ -140,6 +147,8 @@ st.markdown("""
         z-index: 10;
     }
 
+
+    /* [ 응급의료, 고령 의료/복지, 소아의료 ] section 텍스트 설정 */
     .section-header {
         font-size: 22px;
         font-weight: 700;
@@ -255,43 +264,41 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ── 1. 상단: 좌우 슬라이드 배너 (4개 배경) ────────────────
+
+# ── 1. 상단: 좌우 슬라이드 배너 (4개) ────────────────
 st.markdown("""
     <div class="slider-wrapper">
         <div class="slides-container">
             <div class="slide slide-1">
-                <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
+                <div class="hero-title">데이터로 진단하는 대한민국 의료·복지 격차</div>
                 <div class="hero-subtitle">
-                    우리는 국민과 지역사회를 위한 보건의료복지 지표를 분석하고 선도합니다.<br>
-                    대한민국 시·도별 인구 구조 변화와 필수 의료 시설 공급 수준을 정밀 분석하여 의료 인프라 불균형 해소를 위한 인사이트를 제공합니다.
+                    10개년 공공데이터와 정규화 알고리즘을 통해 지역별 인프라 수급 불균형과 취약지를 입체적으로 조명합니다.
                 </div>
             </div>
             <div class="slide slide-2">
-                <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
+                <div class="hero-title">생명과 직결되는 응급·필수의료 접근성의 재발견</div>
                 <div class="hero-subtitle">
-                    우리는 국민과 지역사회를 위한 보건의료복지 지표를 분석하고 선도합니다.<br>
-                    대한민국 시·도별 인구 구조 변화와 필수 의료 시설 공급 수준을 정밀 분석하여 의료 인프라 불균형 해소를 위한 인사이트를 제공합니다.
+                    대도시권 쏠림 현상과 응급의료 격차를 해소하고, 객관적 지표에 기반한 실효성 있는 정책 대안을 제시합니다.
                 </div>
             </div>
             <div class="slide slide-3">
-                <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
+                <div class="hero-title">초고령사회, 고령 복지·의료 인프라의 균형을 찾다</div>
                 <div class="hero-subtitle">
-                    우리는 국민과 지역사회를 위한 보건의료복지 지표를 분석하고 선도합니다.<br>
-                    대한민국 시·도별 인구 구조 변화와 필수 의료 시설 공급 수준을 정밀 분석하여 의료 인프라 불균형 해소를 위한 인사이트를 제공합니다.
+                    급증하는 고령 인구 대비 요양병원과 노인복지시설의 지역별 수급 상태를 진단하고 미래 수요를 예측합니다.
                 </div>
             </div>
             <div class="slide slide-4">
-                <div class="hero-title">의료정착 및 지역 균형 분석 시스템</div>
+                <div class="hero-title">저출산 파고 속, 소아청소년과 인프라 붕괴에 대응하다</div>
                 <div class="hero-subtitle">
-                    우리는 국민과 지역사회를 위한 보건의료복지 지표를 분석하고 선도합니다.<br>
-                    대한민국 시·도별 인구 구조 변화와 필수 의료 시설 공급 수준을 정밀 분석하여 의료 인프라 불균형 해소를 위한 인사이트를 제공합니다.
+                    출산율 감소와 소아과 인프라 위축 간의 상관관계를 분석하여 우리 아이들의 건강권을 지킬 취약지를 도출합니다.
                 </div>
             </div>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
-# ── 2. 하단: CONTENTS (섹션별 컬럼 구분) ─────────────────────────
+
+# ── 2. 하단: CONTENTS (카테고리별 컬럼 구분) ─────────────────────────
 st.markdown('<div class="contents-title">CONTENTS</div>', unsafe_allow_html=True)
 
 sections = [

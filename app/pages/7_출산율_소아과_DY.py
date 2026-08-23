@@ -15,25 +15,12 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 
-# # [추가] 7_출산율_소아과_DY.py 단독 실행 시에도 데이터가 자동 수집/정제되도록 설정
-# from src.pediatric.collection import run_data_collection
-
-# @st.cache_resource
-# def initialize_pediatric_data():
-#     """앱 최초 실행 시 src/pediatric의 수집 및 정제 파이프라인을 자동 구동합니다."""
-#     try:
-#         run_data_collection()
-#     except Exception as e:
-#         print(f"데이터 자동 수집 중 오류 (무시 가능): {e}")
-
-# # 데이터 자동 수집 실행
-# initialize_pediatric_data()
-
 from src.pediatric.collection import get_geojson
 from src.pediatric.correlation import calculate_correlation, create_heatmap_figure
 from src.pediatric.preprocess import get_preprocessed_data
 from utils.nav import render_sidebar
 from utils.style import inject_base_style
+
 
 # ---------------------------------------------------------
 # 1. 페이지 설정 및 공통 스타일 적용
@@ -45,6 +32,7 @@ st.set_page_config(
 )
 
 inject_base_style()
+# pages/7_출산율_소아과_DY.py와 연결
 render_sidebar("pediatric_dy")
 
 plt.rc("font", family="Malgun Gothic")
@@ -165,7 +153,7 @@ if "global_year_select" not in st.session_state:
 title_col, select_col = st.columns([7.5, 2.5], vertical_alignment="top")
 
 with title_col:
-    st.markdown("<h1 style='margin: 0; padding: 0; font-weight: 800; font-size: 2.2rem;'>출생아 수 & 소아청소년과 현황 분석</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='margin: 0; padding: 0; font-weight: 800; font-size: 2.2rem;'>출산율 대비 소아청소년과 현황 분석</h1>", unsafe_allow_html=True)
     st.caption("출생아 수, 합계출산율 및 소아청소년과 인프라 간의 상관관계와 지역별/연도별 추이를 분석합니다.")
 
 with select_col:
@@ -184,7 +172,6 @@ df_prev = df_filtered_base[df_filtered_base["연도별"] == prev_year]
 curr_births = int(df_curr["출생아수"].sum()) if not df_curr.empty else 0
 curr_fertility = df_curr["합계출산율"].mean() if not df_curr.empty else 0.0
 curr_pediatrics = df_curr["소아청소년과_기관수"].mean() if not df_curr.empty else 0.0
-
 # 소아과 1개소당 출생아 수 계산
 curr_births_per_ped = (curr_births / curr_pediatrics) if curr_pediatrics > 0 else 0.0
 
@@ -264,6 +251,7 @@ with kpi_col4:
     )
 
 st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
 
 # ---------------------------------------------------------
 # 5. 지도 패널(좌측) + TOP 5 순위 패널(우측)
@@ -501,6 +489,7 @@ for tab, metric_name in zip(metric_tabs, metric_tab_names):
         render_map_and_top5_panel(metric_name)
 
 st.markdown("<br>", unsafe_allow_html=True)
+
 
 # ---------------------------------------------------------
 # 6. 하단 세부 분석 탭 (추이 / 상관분석 / 데이터 테이블)
@@ -852,7 +841,7 @@ with tab2:
                 unsafe_allow_html=True,
             )
 
-            # [핵심 인사이트 추가]
+            # 핵심 인사이트 추가
             if not df_sido_rate.empty:
                 b_chg_min_row = df_sido_rate.loc[df_sido_rate["출생아 수 변동률"].idxmin()]
                 p_chg_min_row = df_sido_rate.loc[df_sido_rate["소아과 수 변동률"].idxmin()]
@@ -924,7 +913,7 @@ with tab2:
                 unsafe_allow_html=True,
             )
 
-            # [핵심 인사이트 추가]
+            # 핵심 인사이트 추가
             in_col1, in_col2 = st.columns(2)
             with in_col1:
                 render_insight_card(
@@ -985,7 +974,7 @@ with tab2:
                 unsafe_allow_html=True,
             )
 
-            # [핵심 인사이트 추가]
+            # 핵심 인사이트 추가
             in_col1, in_col2 = st.columns(2)
             with in_col1:
                 render_insight_card(
@@ -1000,7 +989,7 @@ with tab2:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. 상관관계 히트맵
+    # 2-1. 상관관계 히트맵
     with st.container(border=True):
         st.markdown("#### 2. 상관관계 히트맵 (Correlation Heatmap Matrix)")
         st.caption("세 지표 간 피어슨 상관계수($3 \\times 3$) 및 지역별 지표 상관정도 비교 분석")
@@ -1067,7 +1056,7 @@ with tab2:
                 st.plotly_chart(fig_hm, use_container_width=True)
 
         with hm_col2:
-            # 3. 상관계수 요약 표
+            # 2-2. 상관계수 요약 표
             with st.container(border=True):
                 st.markdown("**지역별 출생아 수/합계출산율 vs 소아과 기관 수 상관계수**")
 
@@ -1154,7 +1143,7 @@ with tab2:
                 )
                 st.markdown("<br>", unsafe_allow_html=True)
 
-        # [핵심 인사이트 카드 분리 배치] - 히트맵과 표가 담긴 메인 컨테이너 하단 바깥쪽에 위치
+        # 핵심 인사이트 카드 히트맵과 표가 담긴 메인 컨테이너 하단 바깥쪽에 위치
         avg_b_corr = df_sido_corr["출생아 수 vs 소아과 수 상관계수"].mean()
         avg_f_corr = df_sido_corr["합계출산율 vs 소아과 수 상관계수"].mean()
 
@@ -1199,7 +1188,8 @@ with tab2:
                 </div>
                 """,
                 unsafe_allow_html=True
-            )            
+            )     
+
             btn_col1, btn_col2 = st.columns(2)
             if btn_col1.button("전체선택", key="spm_btn_all", use_container_width=True):
                 st.session_state["spm_selected_sidos"] = all_sido_options.copy()
@@ -1346,7 +1336,7 @@ with tab2:
             unsafe_allow_html=True,
         )
 
-        # [핵심 인사이트 추가]
+        # 핵심 인사이트 추가
         s_col1, s_col2 = st.columns(2)
         with s_col1:
             render_insight_card(
@@ -1459,7 +1449,7 @@ with tab2:
             unsafe_allow_html=True,
         )
 
-        # [핵심 인사이트 추가]
+        # 핵심 인사이트 추가
         if not df_combo.empty:
             first_yr = df_combo.iloc[0]
             last_yr = df_combo.iloc[-1]
