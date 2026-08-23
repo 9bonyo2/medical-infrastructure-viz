@@ -13,10 +13,7 @@ from pediatric.charts import plot_region_trends, plot_year_comparison  # noqa: E
 from pediatric.controls import select_regions_dropdown, select_year_dropdown  # noqa: E402
 from pediatric.data_loader import load_data  # noqa: E402
 from pediatric.maps import plot_supply_capacity_map  # noqa: E402
-from pediatric.page_style import (  # noqa: E402
-    configure_matplotlib_font,
-    inject_pediatric_page_style,
-)
+from pediatric.page_style import inject_pediatric_page_style  # noqa: E402
 from pediatric.summaries import (  # noqa: E402
     show_global_kpis,
     show_supply_capacity_summary,
@@ -33,7 +30,6 @@ CHILD_METRIC = "아동1만명당전문의수"
 
 inject_base_style()
 inject_pediatric_page_style()
-configure_matplotlib_font()
 render_sidebar(active_key="birth_jh")
 
 try:

@@ -1,16 +1,4 @@
-import matplotlib.pyplot as plt
-from matplotlib import font_manager
 import streamlit as st
-
-
-def configure_matplotlib_font() -> None:
-    """실행 환경에 설치된 한글 글꼴을 우선 적용한다."""
-    installed_fonts = {font.name for font in font_manager.fontManager.ttflist}
-    for font_name in ("Malgun Gothic", "AppleGothic", "NanumGothic"):
-        if font_name in installed_fonts:
-            plt.rcParams["font.family"] = font_name
-            break
-    plt.rcParams["axes.unicode_minus"] = False
 
 
 def inject_pediatric_page_style() -> None:

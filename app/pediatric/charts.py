@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
+import plotly.graph_objects as go
+from plotly.colors import qualitative
 import streamlit as st
 
 from pediatric.config import METRIC_LABELS
@@ -13,32 +13,112 @@ for font_path in fm.findSystemFonts():
 plt.rcParams["font.family"] = "NanumGothic"
 plt.rcParams["axes.unicode_minus"] = False
 
+PLOTLY_FONT_FAMILY = (
+    "Pretendard, Noto Sans KR, NanumGothic, Malgun Gothic, "
+    "Apple SD Gothic Neo, sans-serif"
+)
+PLOTLY_CONFIG = {"displayModeBar": False, "responsive": True}
+
+
+def _apply_common_layout(
+    figure: go.Figure,
+    *,
+    x_title: str,
+    y_title: str,
+    right_margin: int = 20,
+) -> None:
+    """브라우저가 한글을 렌더링하도록 공통 Plotly 스타일을 적용한다."""
+    figure.update_layout(
+        height=440,
+        margin=dict(l=55, r=right_margin, t=15, b=70),
+        plot_bgcolor="#FFFFFF",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(
+            family=PLOTLY_FONT_FAMILY,
+            size=12,
+            color="#1F2937",
+        ),
+        hoverlabel=dict(
+            font=dict(family=PLOTLY_FONT_FAMILY, size=12),
+        ),
+        xaxis=dict(
+            title=x_title,
+            showgrid=True,
+            gridcolor="#E5E7EB",
+            zeroline=False,
+        ),
+        yaxis=dict(
+            title=y_title,
+            showgrid=True,
+            gridcolor="#E5E7EB",
+            zeroline=False,
+        ),
+    )
+
+
 def plot_region_trends(
     data: pd.DataFrame,
     selected_regions: list[str],
     selected_metric: str,
 ) -> None:
-    """선택 지역의 연도별 공급 지표 변화를 표시한다."""
+    """선택 지역의 연도별 공급 지표 변화를 Plotly로 표시한다."""
     filtered = data[data["지역"].isin(selected_regions)].copy()
-    colors = sns.color_palette("husl", n_colors=len(selected_regions))
-    color_map = dict(zip(selected_regions, colors))
-    metric_label = METRIC_LABELS[selected_metric]
-    fig, axis = plt.subplots(figsize=(8.4, 5.2))
+    if filtered.empty:
+        st.warning("선택한 지역의 연도별 데이터가 없습니다.")
+        return
 
-    for region in selected_regions:
-        region_df = filtered[filtered["지역"] == region].sort_values("시점")
-        axis.plot(
-            region_df["시점"], region_df[selected_metric], marker="o",
-            markersize=4, linewidth=1.7, color=color_map[region], label=region,
+    metric_label = METRIC_LABELS[selected_metric]
+    colors = qualitative.Alphabet
+    figure = go.Figure()
+
+    for index, region in enumerate(selected_regions):
+        region_data = (
+            filtered[filtered["지역"] == region]
+            .dropna(subset=["시점", selected_metric])
+            .sort_values("시점")
+        )
+        if region_data.empty:
+            continue
+
+        figure.add_trace(
+            go.Scatter(
+                x=region_data["시점"],
+                y=region_data[selected_metric],
+                mode="lines+markers",
+                name=region,
+                line=dict(color=colors[index % len(colors)], width=2),
+                marker=dict(size=6),
+                hovertemplate=(
+                    "<b>%{fullData.name}</b><br>"
+                    "연도: %{x}<br>"
+                    f"{metric_label}: %{{y:.2f}}명"
+                    "<extra></extra>"
+                ),
+            )
         )
 
-    axis.set_xlabel("연도")
-    axis.set_ylabel(metric_label)
-    axis.grid(alpha=0.3)
-    axis.legend(bbox_to_anchor=(1.01, 1), loc="upper left", fontsize=7)
-    fig.subplots_adjust(right=0.76, bottom=0.12)
-    st.pyplot(fig, width="stretch")
-    plt.close(fig)
+    _apply_common_layout(
+        figure,
+        x_title="연도",
+        y_title=metric_label,
+        right_margin=145,
+    )
+    figure.update_layout(
+        legend=dict(
+            x=1.01,
+            y=1,
+            xanchor="left",
+            yanchor="top",
+            font=dict(family=PLOTLY_FONT_FAMILY, size=10),
+        ),
+        xaxis=dict(dtick=1),
+    )
+    st.plotly_chart(
+        figure,
+        use_container_width=True,
+        config=PLOTLY_CONFIG,
+        key=f"region-trend-{selected_metric}",
+    )
 
 
 def plot_year_comparison(
@@ -46,23 +126,49 @@ def plot_year_comparison(
     selected_year: int,
     selected_metric: str,
 ) -> None:
-    """선택 연도의 지역별 공급 지표를 내림차순으로 비교한다."""
-    year_df = data[data["시점"] == selected_year].drop_duplicates("지역").copy()
-    regions = sorted(year_df["지역"].dropna().unique())
-    colors = sns.color_palette("husl", n_colors=len(regions))
-    color_map = dict(zip(regions, colors))
-    metric_label = METRIC_LABELS[selected_metric]
-    fig, axis = plt.subplots(figsize=(8.4, 5.2))
-
-    order = year_df.sort_values(selected_metric, ascending=False)["지역"].tolist()
-    sns.barplot(
-        data=year_df, x="지역", y=selected_metric, hue="지역", order=order,
-        palette=color_map, legend=False, ax=axis,
+    """선택 연도의 지역별 공급 지표를 Plotly 막대그래프로 비교한다."""
+    year_data = (
+        data[data["시점"] == selected_year]
+        .drop_duplicates("지역")
+        .dropna(subset=["지역", selected_metric])
+        .sort_values(selected_metric, ascending=False)
+        .copy()
     )
-    axis.set_xlabel("지역")
-    axis.set_ylabel(metric_label)
-    axis.tick_params(axis="x", rotation=55, labelsize=8)
-    axis.grid(axis="y", alpha=0.3)
-    fig.subplots_adjust(bottom=0.27, left=0.11, right=0.98)
-    st.pyplot(fig, width="stretch")
-    plt.close(fig)
+    if year_data.empty:
+        st.warning(f"{selected_year}년 지역별 데이터가 없습니다.")
+        return
+
+    metric_label = METRIC_LABELS[selected_metric]
+    colors = qualitative.Alphabet
+    bar_colors = [colors[index % len(colors)] for index in range(len(year_data))]
+
+    figure = go.Figure(
+        go.Bar(
+            x=year_data["지역"],
+            y=year_data[selected_metric],
+            marker_color=bar_colors,
+            customdata=year_data[["지역"]],
+            hovertemplate=(
+                "<b>%{customdata[0]}</b><br>"
+                f"{metric_label}: %{{y:.2f}}명"
+                "<extra></extra>"
+            ),
+        )
+    )
+    _apply_common_layout(
+        figure,
+        x_title="지역",
+        y_title=metric_label,
+    )
+    figure.update_xaxes(
+        categoryorder="array",
+        categoryarray=year_data["지역"].tolist(),
+        tickangle=-50,
+        tickfont=dict(family=PLOTLY_FONT_FAMILY, size=10),
+    )
+    st.plotly_chart(
+        figure,
+        use_container_width=True,
+        config=PLOTLY_CONFIG,
+        key=f"year-comparison-{selected_year}-{selected_metric}",
+    )
