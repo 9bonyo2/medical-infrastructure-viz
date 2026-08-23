@@ -15,6 +15,20 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 
+# # [추가] 7_출산율_소아과_DY.py 단독 실행 시에도 데이터가 자동 수집/정제되도록 설정
+# from src.pediatric.collection import run_data_collection
+
+# @st.cache_resource
+# def initialize_pediatric_data():
+#     """앱 최초 실행 시 src/pediatric의 수집 및 정제 파이프라인을 자동 구동합니다."""
+#     try:
+#         run_data_collection()
+#     except Exception as e:
+#         print(f"데이터 자동 수집 중 오류 (무시 가능): {e}")
+
+# # 데이터 자동 수집 실행
+# initialize_pediatric_data()
+
 from src.pediatric.collection import get_geojson
 from src.pediatric.correlation import calculate_correlation, create_heatmap_figure
 from src.pediatric.preprocess import get_preprocessed_data
@@ -83,8 +97,9 @@ except Exception as e:
 # 기본 데이터 프레임 (전국 제외)
 df_filtered_base = df_data[df_data["시도별"] != "전국"]
 
+
 # ---------------------------------------------------------
-# 3. 커스텀 KPI 카드 컴포넌트 함수
+# 3. 커스텀 UI 컴포넌트 함수 (KPI 카드 & 인사이트 카드)
 # ---------------------------------------------------------
 def render_custom_kpi_card(icon: str, label: str, value: str, unit: str, yoy_html: str):
     html_code = f"""
@@ -117,19 +132,41 @@ def render_custom_kpi_card(icon: str, label: str, value: str, unit: str, yoy_htm
     st.markdown(html_code, unsafe_allow_html=True)
 
 
+def render_insight_card(title: str, text: str):
+    """그래프 하단에 표시되는 핵심 인사이트 전용 카드 컴포넌트"""
+    html_code = f"""
+    <div style="
+        background-color: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-left: 4px solid #3B82F6;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #334155;
+        line-height: 1.5;
+    ">
+        💡 <strong style="color: #1E40AF;">{title}:</strong> {text}
+    </div>
+    """
+    st.markdown(html_code, unsafe_allow_html=True)
+
+
 # ---------------------------------------------------------
-# 4. 헤더 및 KPI 카드 영역 (1번 요청: 타이틀과 '기준 연도' 셀렉터 한 라인 배치)
+# 4. 헤더 및 KPI 카드 영역 (총 4개 KPI 카드 한 행 배치)
 # ---------------------------------------------------------
 available_years = sorted(df_filtered_base["연도별"].unique(), reverse=True)
 
 if "global_year_select" not in st.session_state:
     st.session_state["global_year_select"] = available_years[0]
 
-# 타이틀 헤더와 기준 연도 셀렉터를 동일 선상에 배치
-title_col, select_col = st.columns([8, 2], vertical_alignment="center")
+# 상단 타이틀 및 기준 연도 셀렉터 레이아웃
+title_col, select_col = st.columns([7.5, 2.5], vertical_alignment="top")
 
 with title_col:
-    st.markdown("<h1 style='margin: 0; padding: 0;'>출생아 수 & 소아청소년과 현황 분석</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='margin: 0; padding: 0; font-weight: 800; font-size: 2.2rem;'>출생아 수 & 소아청소년과 현황 분석</h1>", unsafe_allow_html=True)
+    st.caption("출생아 수, 합계출산율 및 소아청소년과 인프라 간의 상관관계와 지역별/연도별 추이를 분석합니다.")
 
 with select_col:
     selected_map_year = st.selectbox(
@@ -139,9 +176,6 @@ with select_col:
         key="global_year_select",
     )
 
-st.caption("출생아 수, 합계출산율 및 소아청소년과 인프라 간의 상관관계와 지역별/연도별 추이를 분석합니다.")
-st.markdown("<div style='margin-bottom: 16px;'></div>", unsafe_allow_html=True)
-
 prev_year = selected_map_year - 1
 
 df_curr = df_filtered_base[df_filtered_base["연도별"] == selected_map_year]
@@ -150,6 +184,9 @@ df_prev = df_filtered_base[df_filtered_base["연도별"] == prev_year]
 curr_births = int(df_curr["출생아수"].sum()) if not df_curr.empty else 0
 curr_fertility = df_curr["합계출산율"].mean() if not df_curr.empty else 0.0
 curr_pediatrics = df_curr["소아청소년과_기관수"].mean() if not df_curr.empty else 0.0
+
+# 소아과 1개소당 출생아 수 계산
+curr_births_per_ped = (curr_births / curr_pediatrics) if curr_pediatrics > 0 else 0.0
 
 def format_yoy(diff, pct, unit="", is_float=False):
     if diff > 0:
@@ -165,6 +202,7 @@ if not df_prev.empty:
     prev_births = int(df_prev["출생아수"].sum())
     prev_fertility = df_prev["합계출산율"].mean()
     prev_pediatrics = df_prev["소아청소년과_기관수"].mean()
+    prev_births_per_ped = (prev_births / prev_pediatrics) if prev_pediatrics > 0 else 0.0
 
     diff_b = curr_births - prev_births
     pct_b = (diff_b / prev_births) * 100 if prev_births else 0
@@ -177,12 +215,17 @@ if not df_prev.empty:
     diff_p = curr_pediatrics - prev_pediatrics
     pct_p = (diff_p / prev_pediatrics) * 100 if prev_pediatrics else 0
     yoy_pediatrics_html = format_yoy(round(diff_p, 1), pct_p, "개소", is_float=True)
+    
+    diff_bpp = curr_births_per_ped - prev_births_per_ped
+    pct_bpp = (diff_bpp / prev_births_per_ped) * 100 if prev_births_per_ped else 0
+    yoy_bpp_html = format_yoy(round(diff_bpp, 1), pct_bpp, "명", is_float=True)
 else:
     yoy_births_html = '<span style="color: #94A3B8;">전년 데이터 없음</span>'
     yoy_fertility_html = '<span style="color: #94A3B8;">전년 데이터 없음</span>'
     yoy_pediatrics_html = '<span style="color: #94A3B8;">전년 데이터 없음</span>'
+    yoy_bpp_html = '<span style="color: #94A3B8;">전년 데이터 없음</span>'
 
-kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
+kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
 
 with kpi_col1:
     render_custom_kpi_card(
@@ -211,10 +254,19 @@ with kpi_col3:
         yoy_html=yoy_pediatrics_html,
     )
 
-st.markdown("<br>", unsafe_allow_html=True)
+with kpi_col4:
+    render_custom_kpi_card(
+        icon="",
+        label=f"소아과 1개소당 출생아 수 ({selected_map_year}년)",
+        value=f"{curr_births_per_ped:,.1f}",
+        unit="명",
+        yoy_html=yoy_bpp_html,
+    )
+
+st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 5. 지도 패널(좌측) + TOP 5 순위 패널(우측) (2번 요청: 외부에 지표 선택 탭 구성)
+# 5. 지도 패널(좌측) + TOP 5 순위 패널(우측)
 # ---------------------------------------------------------
 METRIC_OPTIONS = {
     "출생아 수": "출생아수",
@@ -227,19 +279,15 @@ METRIC_UNITS = {
     "소아청소년과 기관 수": "개소",
 }
 
-# 지도 및 TOP 5 패널 외부 상단에 지표 선택 탭 생성
 metric_tab_names = list(METRIC_OPTIONS.keys())
 metric_tabs = st.tabs(metric_tab_names)
 
-# 각 탭 클릭 시 표시될 지도 & TOP 5 공통 렌더링 함수
 def render_map_and_top5_panel(selected_metric_label: str):
     selected_metric_col = METRIC_OPTIONS[selected_metric_label]
 
-    # 지도 패널과 TOP 5 영역을 하나의 대형 패널(Border Container)로 감쌈
     with st.container(border=True):
         map_col, top5_col = st.columns([7, 3])
 
-        # --- [좌측] 지도 카통 박스 ---
         with map_col:
             with st.container(border=True):
                 st.markdown(
@@ -302,9 +350,7 @@ def render_map_and_top5_panel(selected_metric_label: str):
                 else:
                     st.warning("경계 데이터(GeoJSON) 또는 해당 조건의 데이터가 존재하지 않습니다.")
 
-        # --- [우측] TOP 5 순위 카드 박스 ---
         with top5_col:
-            # 1. 상단 기본 TOP 5 박스
             with st.container(border=True):
                 st.markdown(
                     f"""
@@ -356,7 +402,6 @@ def render_map_and_top5_panel(selected_metric_label: str):
                 else:
                     st.info("표시할 TOP 5 데이터가 없습니다.")
 
-            # 2. 하단 대비 소아과 최소 취약 지역 TOP 5 박스
             with st.container(border=True):
                 st.markdown(
                     f"""
@@ -451,7 +496,6 @@ def render_map_and_top5_panel(selected_metric_label: str):
                 else:
                     st.info("표시할 데이터가 없습니다.")
 
-# 외부 탭 3개에 대응하여 각각 지도 & TOP5 영역 바인딩
 for tab, metric_name in zip(metric_tabs, metric_tab_names):
     with tab:
         render_map_and_top5_panel(metric_name)
@@ -574,6 +618,25 @@ with tab1:
                     margin=dict(l=10, r=10, t=10, b=10),
                 )
                 st.plotly_chart(fig_line, use_container_width=True)
+
+                # [핵심 인사이트 추가]
+                max_row = df_line_filtered.loc[df_line_filtered[target_metric].idxmax()]
+                min_row = df_line_filtered.loc[df_line_filtered[target_metric].idxmin()]
+                unit_str = "명" if target_metric != "소아청소년과_기관수" else "개소"
+                val_fmt = "{:,.3f}" if target_metric == "합계출산율" else "{:,.0f}"
+
+                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                ins_col1, ins_col2 = st.columns(2)
+                with ins_col1:
+                    render_insight_card(
+                        f"최대 {target_metric} 기록 지역",
+                        f"<b>{max_row['시도별']}</b> ({max_row['연도별']}년, {val_fmt.format(max_row[target_metric])}{unit_str}) - 선택된 조건에서 가장 높은 수치를 기록했습니다."
+                    )
+                with ins_col2:
+                    render_insight_card(
+                        f"최저 {target_metric} 기록 지역",
+                        f"<b>{min_row['시도별']}</b> ({min_row['연도별']}년, {val_fmt.format(min_row[target_metric])}{unit_str}) - 선택된 조건에서 가장 낮은 수치를 기록했습니다."
+                    )
             else:
                 st.info("선택한 지역 또는 연도 범위에 해당하는 데이터가 없습니다. 오른쪽에서 지역을 1개 이상 선택해 주세요.")
 
@@ -778,7 +841,7 @@ with tab2:
 
             st.markdown(
                 """
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 2px; margin-bottom: 16px; font-size: 11px; color: #64748B; line-height: 1.5;">
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 2px; margin-bottom: 12px; font-size: 11px; color: #64748B; line-height: 1.5;">
                     <b>지표 단위 안내:</b> 
                     <b>출생아 수</b> (명) &nbsp;|&nbsp; 
                     <b>합계출산율</b> (여성 1명이 평생 낳을 것으로 예상되는 평균 출생아 수, 명) &nbsp;|&nbsp; 
@@ -788,6 +851,31 @@ with tab2:
                 """,
                 unsafe_allow_html=True,
             )
+
+            # [핵심 인사이트 추가]
+            if not df_sido_rate.empty:
+                b_chg_min_row = df_sido_rate.loc[df_sido_rate["출생아 수 변동률"].idxmin()]
+                p_chg_min_row = df_sido_rate.loc[df_sido_rate["소아과 수 변동률"].idxmin()]
+
+                in_col1, in_col2 = st.columns(2)
+                with in_col1:
+                    render_insight_card(
+                        "출생아 수 최대 감소 지역",
+                        f"<b>{b_chg_min_row['시도별']}</b> ({b_chg_min_row['출생아 수 변동률']:+.1f}%) - 비교 기간 동안 출생아 수 감소 폭이 가장 컸습니다."
+                    )
+                    render_insight_card(
+                        "소아과 인프라 감소 취약 지역",
+                        f"<b>{p_chg_min_row['시도별']}</b> ({p_chg_min_row['소아과 수 변동률']:+.1f}%) - 비교 기간 내 소아과 수가 가장 크게 감소했습니다."
+                    )
+                with in_col2:
+                    render_insight_card(
+                        "수도권 집중 구조",
+                        "경기 및 서울 지역이 전체 출생아 수와 소아과 수의 과반을 점유하며 수도권 편중 현상이 나타납니다."
+                    )
+                    render_insight_card(
+                        "출산율 - 인프라 불일치",
+                        "합계출산율이 상대적으로 높은 지방 지역도 절대 수요(출생아 수) 부족으로 인해 소아과 인프라는 정체되는 경향을 보입니다."
+                    )
 
         elif bubble_mode == "특정 연도보기":
             df_single = df_filtered_base[
@@ -826,7 +914,7 @@ with tab2:
 
             st.markdown(
                 """
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 2px; margin-bottom: 16px; font-size: 11px; color: #64748B; line-height: 1.5;">
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 2px; margin-bottom: 12px; font-size: 11px; color: #64748B; line-height: 1.5;">
                     <b>지표 단위 안내:</b> 
                     <b>출생아 수</b> (명) &nbsp;|&nbsp; 
                     <b>합계출산율</b> (여성 1명이 평생 낳을 것으로 예상되는 평균 출생아 수, 명) &nbsp;|&nbsp; 
@@ -835,6 +923,19 @@ with tab2:
                 """,
                 unsafe_allow_html=True,
             )
+
+            # [핵심 인사이트 추가]
+            in_col1, in_col2 = st.columns(2)
+            with in_col1:
+                render_insight_card(
+                    "절대 출생아 수 기반 배치",
+                    f"{selected_bubble_year}년 기준 소아과 기관 수(버블 크기)는 합계출산율보다 <b>출생아 수(X축)</b>의 크기와 직결됩니다."
+                )
+            with in_col2:
+                render_insight_card(
+                    "지역 간 양극화 현상",
+                    "수도권 대도시 지역은 높은 출생아 수와 대규모 소아과 군집을 형성하는 반면, 지방 시·도는 영세한 규모에 머무릅니다."
+                )
 
         else:  # 연도별 타임라인
             df_anim = df_filtered_base.sort_values(by="연도별")
@@ -874,7 +975,7 @@ with tab2:
 
             st.markdown(
                 """
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 2px; margin-bottom: 16px; font-size: 11px; color: #64748B; line-height: 1.5;">
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 2px; margin-bottom: 12px; font-size: 11px; color: #64748B; line-height: 1.5;">
                     <b>지표 단위 안내:</b> 
                     <b>출생아 수</b> (명) &nbsp;|&nbsp; 
                     <b>합계출산율</b> (여성 1명이 평생 낳을 것으로 예상되는 평균 출생아 수, 명) &nbsp;|&nbsp; 
@@ -883,6 +984,19 @@ with tab2:
                 """,
                 unsafe_allow_html=True,
             )
+
+            # [핵심 인사이트 추가]
+            in_col1, in_col2 = st.columns(2)
+            with in_col1:
+                render_insight_card(
+                    "좌하향 이동 트렌드",
+                    "연도가 진행됨에 따라 전반적으로 버블들이 좌하향(출생아 수 및 합계출산율 동시 감소)하는 흐름을 보입니다."
+                )
+            with in_col2:
+                render_insight_card(
+                    "인프라의 연동 감소",
+                    "수요층(출생아 수) 축소에 따라 소아과 버블 크기 또한 시차를 두고 점진적으로 감소하는 양상이 확인됩니다."
+                )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1031,15 +1145,31 @@ with tab2:
                     <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: -10px; font-size: 11px; color: #64748B; line-height: 1.5;">
                         <b>상관계수 해석 범주: </b> 
                         <span style="color: #065F46; font-weight: bold;">+0.7 이상</span> (강한 양의 상관관계) &nbsp;|&nbsp; 
-                        <span style="color: #047857;">+0.3 ~ +0.7</span> (뚜렷한/약한 양의 상관관계) &nbsp;|&nbsp; 
-                        <span>-0.3 ~ +0.3</span> (상관관계 거의 없음) &nbsp;|&nbsp; 
-                        <span style="color: #B91C1C;">-0.7 ~ -0.3</span> (뚜렷한/약한 음의 상관관계) &nbsp;|&nbsp; 
-                        <span style="color: #991B1B; font-weight: bold;">-0.7 이하</span> (강한 음의 상관관계)
+                        <span style="color: #047857;">+0.3 ~ +0.7</span> (양의 상관관계) &nbsp;|&nbsp; 
+                        <span>-0.3 ~ +0.3</span> (상관 없음) &nbsp;|&nbsp; 
+                        <span style="color: #991B1B; font-weight: bold;">-0.3 이하</span> (음의 상관관계)
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
                 st.markdown("<br>", unsafe_allow_html=True)
+
+        # [핵심 인사이트 카드 분리 배치] - 히트맵과 표가 담긴 메인 컨테이너 하단 바깥쪽에 위치
+        avg_b_corr = df_sido_corr["출생아 수 vs 소아과 수 상관계수"].mean()
+        avg_f_corr = df_sido_corr["합계출산율 vs 소아과 수 상관계수"].mean()
+
+        st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
+        h_col1, h_col2 = st.columns(2)
+        with h_col1:
+            render_insight_card(
+                "출생아 수 연관성",
+                f"전국 평균 상관계수 <b>{avg_b_corr:+.2f}</b>로, 소아과 개설은 출산율 자체보다 <b>실제 출생아 수(수요 규모)</b>에 직접 반응합니다."
+            )
+        with h_col2:
+            render_insight_card(
+                "합계출산율 연관성",
+                f"전국 평균 상관계수 <b>{avg_f_corr:+.2f}</b>로, 출산율이 높아도 절대 인구가 적은 경우 의료 인프라 유인이 부족함을 나타냅니다."
+            )
                 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1206,7 +1336,7 @@ with tab2:
 
         st.markdown(
             """
-            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 1px; margin-bottom: 16px; font-size: 11px; color: #64748B; line-height: 1.5;">
+            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 1px; margin-bottom: 12px; font-size: 11px; color: #64748B; line-height: 1.5;">
                 <b>지표 단위 안내:</b> 
                 <b>출생아 수</b> (명) &nbsp;|&nbsp; 
                 <b>합계출산율</b> (여성 1명이 평생 낳을 것으로 예상되는 평균 출생아 수, 명) &nbsp;|&nbsp; 
@@ -1215,6 +1345,19 @@ with tab2:
             """,
             unsafe_allow_html=True,
         )
+
+        # [핵심 인사이트 추가]
+        s_col1, s_col2 = st.columns(2)
+        with s_col1:
+            render_insight_card(
+                "출생아 수와 소아과 수의 강한 선형성",
+                "<b>출생아 수 vs 소아과 수</b> 관계에서 뚜렷한 우상향 패턴을 보이며, 의료 기관 개설의 주 결정 요인이 절대 수요 규모임을 나타냅니다."
+            )
+        with s_col2:
+            render_insight_card(
+                "출산율과 인프라 공급의 괴리",
+                "<b>합계출산율 vs 소아과 수</b> 교차 비교 시 출산율이 높음에도 소아과 공급이 저조한 지방 군·시 지역의 격차가 확인됩니다."
+            )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -1306,7 +1449,7 @@ with tab2:
 
         st.markdown(
             """
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 1px; margin-bottom: 16px; font-size: 11px; color: #64748B; line-height: 1.5;">
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 8px 12px; margin-top: 1px; margin-bottom: 12px; font-size: 11px; color: #64748B; line-height: 1.5;">
                     <b>지표 단위 안내:</b> 
                     <b>출생아 수</b> (명) &nbsp;|&nbsp; 
                     <b>합계출산율</b> (여성 1명이 평생 낳을 것으로 예상되는 평균 출생아 수, 명) &nbsp;|&nbsp; 
@@ -1315,6 +1458,25 @@ with tab2:
             """,
             unsafe_allow_html=True,
         )
+
+        # [핵심 인사이트 추가]
+        if not df_combo.empty:
+            first_yr = df_combo.iloc[0]
+            last_yr = df_combo.iloc[-1]
+            b_drop = ((last_yr["출생아수"] - first_yr["출생아수"]) / first_yr["출생아수"]) * 100 if first_yr["출생아수"] else 0
+            p_drop = ((last_yr["소아청소년과_기관수"] - first_yr["소아청소년과_기관수"]) / first_yr["소아청소년과_기관수"]) * 100 if first_yr["소아청소년과_기관수"] else 0
+
+            c_col1, c_col2 = st.columns(2)
+            with c_col1:
+                render_insight_card(
+                    f"{selected_combo_sido} 출생아 수 추이",
+                    f"{int(first_yr['연도별'])}년 대비 {int(last_yr['연도별'])}년 출생아 수가 <b>{b_drop:+.1f}%</b> 변동하였습니다."
+                )
+            with c_col2:
+                render_insight_card(
+                    f"{selected_combo_sido} 소아과 인프라 추이",
+                    f"동기간 소아청소년과 기관 수가 <b>{p_drop:+.1f}%</b> 변동하여 수요층 감소와 인프라 변동 간의 관련성을 보여줍니다."
+                )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
