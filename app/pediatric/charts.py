@@ -5,6 +5,8 @@ import streamlit as st
 
 from pediatric.config import METRIC_LABELS
 
+plt.rcParams["font.family"] = "NanumGothic"
+plt.rcParams["axes.unicode_minus"] = False
 
 def plot_region_trends(
     data: pd.DataFrame,
