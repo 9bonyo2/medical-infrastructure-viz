@@ -10,9 +10,6 @@ for font_path in fm.findSystemFonts():
     if "Nanum" in font_path:
         fm.fontManager.addfont(font_path)
 
-plt.rcParams["font.family"] = "NanumGothic"
-plt.rcParams["axes.unicode_minus"] = False
-
 PLOTLY_FONT_FAMILY = (
     "Pretendard, Noto Sans KR, NanumGothic, Malgun Gothic, "
     "Apple SD Gothic Neo, sans-serif"
