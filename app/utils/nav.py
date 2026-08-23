@@ -15,17 +15,55 @@ from utils.style import COLORS
 
 # key: 내부 식별자 / label: 화면 표시 텍스트 / icon: bootstrap-icons 이름 / target: 실제 파일 경로
 PAGES = [
-    {"key": "overview", "label": "프로젝트 개요", "icon": "activity", "target": "app.py"},
-    {"key": "emergency_jh", "label": "응급의료 균형 분석(JH)", "icon": "heart-pulse", "target": "pages/1_응급의료_균형_분석_JH.py"},
-    {"key": "emergency_by", "label": "응급의료 균형 분석(BY)", "icon": "heart-pulse-fill", "target": "pages/2_응급의료_균형_분석_BY.py"},
-    {"key": "aging__sj", "label": "고령화와 노인의료 분석(SJ)", "icon": "people", "target": "pages/3_고령화와_노인의료_분석_SJ.py"},
-    {"key": "aging_sy", "label": "고령화와 노인의료 분석(SY)", "icon": "people-gear", "target": "pages/4_고령화와_노인의료_분석_SY.py"},
-    {"key": "aging_jy", "label": "고령화와 노인의료 분석(JY)", "icon": "building", "target": "pages/5_고령화와_노인의료_분석_JY.py"},
-    {"key": "birth_jh", "label": "출산율과 소아과 분석(JH)", "icon": "emoji-smile", "target": "pages/6_출산율과_소아과_JH.py"},
-    {"key": "birth_dy", "label": "출산율과 소아과 분석(DY)", "icon": "emoji-smile", "target": "pages/7_출산율과_소아과_DY.py"}
+    {
+        "key": "overview",
+        "label": "메인 홈 (Home)",
+        "icon": "activity",
+        "target": "home.py",
+    },
+    {
+        "key": "emergency_jh",
+        "label": "응급의료 균형 분석",
+        "icon": "heart-pulse",
+        "target": "pages/1_응급의료_균형_JH.py",
+    },
+    {
+        "key": "emergency_by",
+        "label": "응급의료 고령화 분석",
+        "icon": "heart-pulse-fill",
+        "target": "pages/2_응급의료_균형_BY.py",
+    },
+    {
+        "key": "aging_sj",
+        "label": "고령화율 분석",
+        "icon": "people",
+        "target": "pages/3_고령화_의료시설_SJ.py",
+    },
+    {
+        "key": "aging_jy",
+        "label": "고령 인프라 수급 균형 추이",
+        "icon": "building",
+        "target": "pages/5_고령화_의료시설_JY.py",
+    },
+    {
+        "key": "aging_sy",
+        "label": "고령 인구 대비 인프라 추이",
+        "icon": "person-gear",
+        "target": "pages/4_고령화_의료시설_SY.py",
+    },
+    {
+        "key": "birth_jh",
+        "label": "아동 수 대비 소아과 현황",
+        "icon": "emoji-smile",
+        "target": "pages/6_출산율과_소아과_JH.py",
+    },
+    {
+        "key": "pediatric_dy",
+        "label": "출산율 대비 소아과 현황",
+        "icon": "emoji-smile-fill",
+        "target": "pages/7_출산율_소아과_DY.py",
+    },
 ]
-
-
 def render_sidebar(active_key: str):
     """공통 사이드바를 렌더링하고, 메뉴 선택 시 해당 페이지로 전환합니다."""
     with st.sidebar:
