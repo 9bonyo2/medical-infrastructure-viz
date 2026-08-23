@@ -18,7 +18,7 @@ from utils.style import COLORS
 PAGES = [
     {
         "key": "overview",
-        "label": "메인 홈 (Home)",
+        "label": "메인 홈",
         "icon": "activity",
         "target": "home.py",
     },
