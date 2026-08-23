@@ -1,3 +1,4 @@
+#  해당 페이지는 엔드리 포인트가 되는 파일이기도 하지만 대쉬보드 페이지 코드라고 생각해주시면 됩니다.
 import streamlit as st
 
 from utils.style import inject_base_style
@@ -62,6 +63,7 @@ with right:
 st.write("")
 
 # ── 상세 분석 영역 바로가기 ──────────────────────────────────────────────
+# TODO: 추후에 각 카드 클릭 시 해당 페이지로 이동하도록 기능 추가 필요
 st.markdown("##### 상세 분석 영역 바로가기")
 q1, q2 = st.columns(2, gap="medium")
 with q1:
@@ -82,6 +84,7 @@ with q4:
 st.write("")
 
 # ── 프로젝트 분석 흐름 ───────────────────────────────────────────────────
+# TODO: 해당 항목은 논의 후 구체화가 필요해 보임.
 with st.container(border=True):
     st.markdown("##### 프로젝트 분석 흐름")
     process_flow(["데이터 수집", "데이터 정제 및 표준화", "지역별 지표 분석", "의료 취약점수 산출", "시각화 및 결과 해석"])

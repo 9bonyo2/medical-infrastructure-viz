@@ -4,3 +4,4 @@ plotly>=5.22
 pandas>=2.2
 numpy>=1.26
 statsmodels>=0.14
+kaleido>=0.2.1  # 서연 추가: app/aging/heatmap_scroll_sy.py 의 연도별 지도 정적 이미지 export용

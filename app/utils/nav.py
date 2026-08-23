@@ -14,6 +14,7 @@ from streamlit_option_menu import option_menu
 from utils.style import COLORS
 
 # key: 내부 식별자 / label: 화면 표시 텍스트 / icon: bootstrap-icons 이름 / target: 실제 파일 경로
+# target 키 값으로 실제 라우팅 처리를 한다고 보시면 됩니다!
 PAGES = [
     {"key": "overview", "label": "프로젝트 개요", "icon": "activity", "target": "home.py"},
     {"key": "emergency_jy", "label": "응급의료 균형 (JH)", "icon": "heart-pulse", "target": "pages/1_응급의료_균형_JH.py"},
