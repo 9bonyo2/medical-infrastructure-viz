@@ -168,7 +168,7 @@ medical-infrastructure-viz/
 │       ├── collect/                    # KOSIS API 등 수집 파이프라인
 │       └── preprocess/                 # 원천 텍스트 정제 및 병합 라이브러리
 ├── pediatric/
-└────── README.md                       # 
+└────── README.md                       
 ```
 
 ---
